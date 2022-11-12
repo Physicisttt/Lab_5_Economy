@@ -79,7 +79,7 @@ public:
 
 	Agent()
 	{
-		for (int i = Items::Money; i <= Items::Last; i++)
+		for (int i = Items::First; i <= Items::Last; i++)
 		{
 			//inv[i] = 0;
 			inv[i] = 10;
@@ -125,7 +125,7 @@ public:
 	{
 		cout << "inventory:" << endl;
 
-		for (int i = Items::Money; i < Items::Last; i++)
+		for (int i = Items::First; i < Items::Last; i++)
 		{
 			cout << "[" << i << "] = " << inv[i] << endl;
 		}
