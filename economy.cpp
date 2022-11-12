@@ -19,6 +19,16 @@ enum Items
 	Last
 };
 
+int random_Actor()
+{
+	return 0 + rand() % (1 - 0 + 1);
+}
+
+int random_Action()
+{
+	return 0 + rand() % (1 - 0 + 1);
+}
+
 class Good
 {
 public:
@@ -27,6 +37,7 @@ public:
 	
 	virtual void print() = 0;
 };
+
 /*
 class Material : public Good
 {
@@ -53,62 +64,88 @@ public:
 
 	Agent()
 	{
-		for (int i = 1; i <= Items::Last; i++)
+		for (int i = Items::Money; i <= Items::Last; i++)
 		{
-			inv[i] = 0;
+			//inv[i] = 0;
+			inv[i] = 10;
 		}
 	}
 
 	void CraftMoney()
 	{
-		inv[5]--;
-		inv[1]++;
+		inv[Items::Manufact_good]--;
+		inv[Items::Money]++;
 	}
 
 	void CraftMaterial()
 	{
-		inv[1]--;
-		inv[3]--;
-		inv[2]++;
+		inv[Items::Money]--;
+		inv[Items::Labour]--;
+		inv[Items::Material]++;
 	}
 
 	void CraftLabour()
 	{
-		inv[4]--;
-		inv[5]--;
-		inv[3]++;
+		inv[Items::Food]--;
+		inv[Items::Manufact_good]--;
+		inv[Items::Labour]++;
 	}
 
 	void CraftFood()
 	{
-		inv[1]--;
-		inv[3]--;
-		inv[4]++;
+		inv[Items::Money]--;
+		inv[Items::Labour]--;
+		inv[Items::Food]++;
 	}
 
 	void CraftGood()
 	{
-		inv[1]--;
-		inv[2]--;
-		inv[3]--;
-		inv[5]++;
+		inv[Items::Money]--;
+		inv[Items::Material]--;
+		inv[Items::Labour]--;
+		inv[Items::Manufact_good]++;
 	}
 
 	void print_inventory()
 	{
 		cout << "inventory:" << endl;
 
-		for (int i = 0; i < Items::Last; i++)
+		for (int i = Items::Money; i < Items::Last; i++)
 		{
 			cout << "[" << i << "] = " << inv[i] << endl;
 		}
 	}
+
 };
 
+class MarketPlace
+{
+public:
+	vector<Agent*> Players;
+
+	//void fillPlayers(vector<Agent*> ttt)
+	//Agent* createPlayer() ?
+
+	void exchange(Agent* A1, int good_type_1, int good_amount_1, Agent* A2, int good_type_2, int good_amount_2)
+	{
+		A1->inv[good_type_2] += good_amount_2;
+		A1->inv[good_type_1] -= good_amount_1;
+		A2->inv[good_type_1] += good_amount_1;
+		A2->inv[good_type_2] -= good_amount_2;
+	}
+};
+
+void exchange_good(Agent* A1, int good_type_1, int good_amount_1, Agent* A2, int good_type_2, int good_amount_2)
+{
+	A1->inv[good_type_2] += good_amount_2;
+	A1->inv[good_type_1] -= good_amount_1;
+	A2->inv[good_type_1] += good_amount_1;
+	A2->inv[good_type_2] -= good_amount_2;
+}
 
 int main(void)
 {
-	cout << "map test:" << endl;
+/*	cout << "map test:" << endl;
 
 	inventory ttt;
 
@@ -133,32 +170,31 @@ int main(void)
 	human.CraftFood();
 	human.CraftMaterial();
 	human.print_inventory();
+	*/
 
-	
-	/*
-	inventory Inv_1;
+	vector<Agent> Bazar;//must be vector<Agent*> in the future
+	Bazar.resize(3);
 
-	Inv_1[1] = 4;
-	Inv_1[2] = 4;
-	Inv_1[3] = 4;
-	Inv_1[4] = 4;
-	Inv_1[5] = 4;
-
-	cout << "inventory test:" << endl;
-	for (int i = 1; i < 6; i++)
+	cout << "Bazar test:" << endl;
+	for (int i = 0; i < Bazar.size(); i++)
 	{
-		cout << "item " << i << " = " << Inv_1[i] << endl;
+		cout << "	Agent <" << i << ">" << endl;
+		Bazar[i].print_inventory();
+		cout << endl;
 	}
 
-	Inv_1[3]++;
-	Inv_1[4] = 3;
+	Agent* AA = &Bazar[0];
+	Agent* BB = &Bazar[1];
 
-	cout << "\n\nmodified inventory:" << endl;
-	for (int i = 1; i < 6; i++)
-	{
-		cout << "item " << i << " = " << Inv_1[i] << endl;
-	}
+	//exchange_good test
 
-	*/								
+	exchange_good(AA, Items::Material, 5, BB, Items::Food, 5);
+
+	cout << "	AA inv:" << endl;
+	AA->print_inventory();
+	cout << endl;
+	cout << "	BB inv:" << endl;
+	BB->print_inventory();
+
 	return 0;
 }
