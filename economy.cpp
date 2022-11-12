@@ -19,14 +19,29 @@ enum Items
 	Last
 };
 
-int random_Actor()
+enum Actions
 {
-	return 0 + rand() % (1 - 0 + 1);
+	First = 1,
+	Craft = First,
+	Exchange,
+	Sell,
+	//other actions will be added
+	Last
+};
+
+int random_int(int left_border, int right_border)
+{
+	return left_border + rand() % (right_border - left_border + 1);
+}
+
+int random_Actor(int vector_size)//this function will be used in the future
+{
+	return random_int(0, vector_size);
 }
 
 int random_Action()
 {
-	return 0 + rand() % (1 - 0 + 1);
+	return random_int(Actions::First, Actions::Last);//this function will be used in the future
 }
 
 class Good
