@@ -6,10 +6,9 @@ using namespace std;
 
 const int items = 5;
 
-typedef map<int, string> mymap;
 typedef map<int, int> inventory;//map<item_type, item_amount>
 
-enum required
+enum Items
 {
 	First = 1,
 	Money = First,
@@ -19,8 +18,6 @@ enum required
 	Manufact_good,
 	Last
 };
-
-vector<string> req_items = {"money", "material", "labour", "food", "manufact_good"};
 
 class Good
 {
@@ -56,7 +53,7 @@ public:
 
 	Agent()
 	{
-		for (int i = 1; i <= required::Last; i++)
+		for (int i = 1; i <= Items::Last; i++)
 		{
 			inv[i] = 0;
 		}
@@ -101,7 +98,7 @@ public:
 	{
 		cout << "inventory:" << endl;
 
-		for (int i = 0; i < required::Last; i++)
+		for (int i = 0; i < Items::Last; i++)
 		{
 			cout << "[" << i << "] = " << inv[i] << endl;
 		}
@@ -113,21 +110,13 @@ int main(void)
 {
 	cout << "map test:" << endl;
 
-	mymap ttt;
+	inventory ttt;
 
-	/*
-	ttt.insert(1, "Money");
-	ttt.insert(2, "Material");
-	ttt.insert(3, "Labour");
-	ttt.insert(4, "Food");
-	ttt.insert(5, "Manufact_good");
-	*/
-
-	ttt[1] = "Money";
-	ttt[2] = "Material";
-	ttt[3] = "Labour";
-	ttt[4] = "Food";
-	ttt[5] = "Manufact_good";
+	ttt[1] = 1;
+	ttt[2] = 2;
+	ttt[3] = 3;
+	ttt[4] = 4;
+	ttt[5] = 5;
 
 
 	cout << "map test: " << ttt[1] << endl;
@@ -136,14 +125,13 @@ int main(void)
 
 	Agent human;
 
-	for (int i = 0; i < required::Last; i++)
+	for (int i = 0; i < Items::Last; i++)
 	{
 		human.inv[i] = 5;
 	}
 
 	human.CraftFood();
 	human.CraftMaterial();
-
 	human.print_inventory();
 
 	
