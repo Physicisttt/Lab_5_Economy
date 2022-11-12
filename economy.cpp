@@ -10,23 +10,23 @@ typedef map<int, int> inventory;//map<item_type, item_amount>
 
 enum Items
 {
-	First = 1,
-	Money = First,
-	Material,
-	Labour,
-	Food,
-	Manufact_good,
-	Last
+	I_First = 1,
+	I_Money = I_First,
+	I_Material,
+	I_Labour,
+	I_Food,
+	I_Manufact_good,
+	I_Last
 };
 
 enum Actions
 {
-	First = 1,
-	Craft = First,
-	Exchange,
-	Sell,
+	A_First = 1,
+	A_Craft = A_First,
+	A_Exchange,
+	A_Sell,
 	//other actions will be added
-	Last
+	A_Last
 };
 
 int random_int(int left_border, int right_border)
@@ -41,7 +41,7 @@ int random_Actor(int vector_size)//this function will be used in the future
 
 int random_Action()
 {
-	return random_int(Actions::First, Actions::Last);//this function will be used in the future
+	return random_int(Actions::A_First, Actions::A_Last);//this function will be used in the future
 }
 
 class Good
@@ -79,7 +79,7 @@ public:
 
 	Agent()
 	{
-		for (int i = Items::First; i <= Items::Last; i++)
+		for (int i = Items::I_First; i <= Items::I_Last; i++)
 		{
 			//inv[i] = 0;
 			inv[i] = 10;
@@ -88,60 +88,87 @@ public:
 
 	void CraftMoney()
 	{
-		inv[Items::Manufact_good]--;
-		inv[Items::Money]++;
+		inv[Items::I_Manufact_good]--;
+		inv[Items::I_Money]++;
 	}
 
 	void CraftMaterial()
 	{
-		inv[Items::Money]--;
-		inv[Items::Labour]--;
-		inv[Items::Material]++;
+		inv[Items::I_Money]--;
+		inv[Items::I_Labour]--;
+		inv[Items::I_Material]++;
 	}
 
 	void CraftLabour()
 	{
-		inv[Items::Food]--;
-		inv[Items::Manufact_good]--;
-		inv[Items::Labour]++;
+		inv[Items::I_Food]--;
+		inv[Items::I_Manufact_good]--;
+		inv[Items::I_Labour]++;
 	}
 
 	void CraftFood()
 	{
-		inv[Items::Money]--;
-		inv[Items::Labour]--;
-		inv[Items::Food]++;
+		inv[Items::I_Money]--;
+		inv[Items::I_Labour]--;
+		inv[Items::I_Food]++;
 	}
 
 	void CraftGood()
 	{
-		inv[Items::Money]--;
-		inv[Items::Material]--;
-		inv[Items::Labour]--;
-		inv[Items::Manufact_good]++;
+		inv[Items::I_Money]--;
+		inv[Items::I_Material]--;
+		inv[Items::I_Labour]--;
+		inv[Items::I_Manufact_good]++;
 	}
 
 	void print_inventory()
 	{
 		cout << "inventory:" << endl;
 
-		for (int i = Items::First; i < Items::Last; i++)
+		for (int i = Items::I_First; i < Items::I_Last; i++)
 		{
 			cout << "[" << i << "] = " << inv[i] << endl;
 		}
+		cout << endl;
 	}
 
 };
+
+Agent* createPlayer()
+{
+	Agent* A = new Agent;
+	return A;
+}
+
+void fillMarketPlace(vector<Agent*>& vec)
+{
+	for (int i = 0; i < vec.size(); i++)
+	{
+		vec[i] = createPlayer();
+	}
+}
 
 class MarketPlace
 {
 public:
 	vector<Agent*> Players;
 
-	//void fillPlayers(vector<Agent*> ttt)
-	//Agent* createPlayer() ?
+	void Initialize(int new_size)
+	{
+		Players.resize(new_size);
+		fillMarketPlace(Players);
+	}
 
-	void exchange(Agent* A1, int good_type_1, int good_amount_1, Agent* A2, int good_type_2, int good_amount_2)
+	void printPlayersInventory()
+	{
+		for (int i = 0; i < Players.size(); i++)
+		{
+			cout << "Player " << i << endl;
+			Players[i]->print_inventory();
+		}
+	}
+
+	void exchange_good(Agent* A1, int good_type_1, int good_amount_1, Agent* A2, int good_type_2, int good_amount_2)
 	{
 		A1->inv[good_type_2] += good_amount_2;
 		A1->inv[good_type_1] -= good_amount_1;
@@ -149,14 +176,6 @@ public:
 		A2->inv[good_type_2] -= good_amount_2;
 	}
 };
-
-void exchange_good(Agent* A1, int good_type_1, int good_amount_1, Agent* A2, int good_type_2, int good_amount_2)
-{
-	A1->inv[good_type_2] += good_amount_2;
-	A1->inv[good_type_1] -= good_amount_1;
-	A2->inv[good_type_1] += good_amount_1;
-	A2->inv[good_type_2] -= good_amount_2;
-}
 
 int main(void)
 {
@@ -186,7 +205,7 @@ int main(void)
 	human.CraftMaterial();
 	human.print_inventory();
 	*/
-
+	/*
 	vector<Agent> Bazar;//must be vector<Agent*> in the future
 	Bazar.resize(3);
 
@@ -203,13 +222,26 @@ int main(void)
 
 	//exchange_good test
 
-	exchange_good(AA, Items::Material, 5, BB, Items::Food, 5);
+	exchange_good(AA, Items::I_Material, 5, BB, Items::I_Food, 5);
 
 	cout << "	AA inv:" << endl;
 	AA->print_inventory();
 	cout << endl;
 	cout << "	BB inv:" << endl;
 	BB->print_inventory();
+	*/
 
+	MarketPlace Avito;
+
+	Avito.Initialize(5);
+
+	Avito.printPlayersInventory();
+
+	cout << "	exchange test 2: " << endl;
+
+	Avito.exchange_good(Avito.Players[0], Items::I_Food, 5, Avito.Players[2], Items::I_Labour, 5);
+
+	Avito.printPlayersInventory();
+	
 	return 0;
 }
