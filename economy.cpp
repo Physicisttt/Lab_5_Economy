@@ -92,7 +92,8 @@ public:
 		for (int i = Items::I_First; i <= Items::I_Last; i++)
 		{
 			//inv[i] = 0;
-			inv[i] = 10;
+			//inv[i] = 10;
+			inv[i] = random_int(6, 15);
 		}
 	}
 
@@ -142,6 +143,22 @@ public:
 		cout << endl;
 	}
 
+	int findMin()// here we find item with the least amount
+	{
+		int min_item = Items::I_First;
+		int min_amount = inv[Items::I_First];
+
+		for (int i = Items::I_First; i < Items::I_Last; i++)
+		{
+			if (inv[i] < min_amount)
+			{
+				min_item = i;
+			}
+		}
+
+		return min_item;
+	}
+
 };
 
 Agent* createPlayer()
@@ -185,6 +202,7 @@ public:
 		A2->inv[good_type_1] += good_amount_1;
 		A2->inv[good_type_2] -= good_amount_2;
 	}
+
 };
 
 int main(void)
@@ -261,12 +279,19 @@ int main(void)
 
 		int A_1 = random_Actor(size);
 		int A_2 = random_Actor(size);
-		int i_1 = random_Item();
-		int i_2 = random_Item();
+
+		//int i_1 = random_Item();
+		//int i_2 = random_Item();
+		int i_1 = Avito.Players[A_1]->findMin();
+		int i_2 = Avito.Players[A_2]->findMin();
+
 		int am_1 = random_Amount();
 		int am_2 = random_Amount();
 
-		Avito.exchange_good(Avito.Players[A_1], i_1, am_1, Avito.Players[A_2], i_2, am_2);
+		if (((Avito.Players[A_1]->inv[i_1] - am_1) > 0) && ((Avito.Players[A_2]->inv[i_2] - am_2) > 0))
+		{
+			Avito.exchange_good(Avito.Players[A_1], i_1, am_1, Avito.Players[A_2], i_2, am_2);
+		}
 	}
 	
 	Avito.printPlayersInventory();
