@@ -36,12 +36,22 @@ int random_int(int left_border, int right_border)
 
 int random_Actor(int vector_size)//this function will be used in the future
 {
-	return random_int(0, vector_size);
+	return random_int(0, vector_size - 1);
 }
 
 int random_Action()
 {
 	return random_int(Actions::A_First, Actions::A_Last);//this function will be used in the future
+}
+
+int random_Item()
+{
+	return random_int(Items::I_First, Items::I_Last - 1);
+}
+
+int random_Amount()
+{
+	return random_int(1, 5);
 }
 
 class Good
@@ -239,9 +249,27 @@ int main(void)
 
 	cout << "	exchange test 2: " << endl;
 
-	Avito.exchange_good(Avito.Players[0], Items::I_Food, 5, Avito.Players[2], Items::I_Labour, 5);
+	Avito.exchange_good(Avito.Players[0], Items::I_Food, 8, Avito.Players[2], Items::I_Labour, 5);
 
 	Avito.printPlayersInventory();
+
+
+	cout << "	100000 exchanges test" << endl;
+	int size = Avito.Players.size();
+	for (int i = 0; i < 100000; i++)
+	{
+
+		int A_1 = random_Actor(size);
+		int A_2 = random_Actor(size);
+		int i_1 = random_Item();
+		int i_2 = random_Item();
+		int am_1 = random_Amount();
+		int am_2 = random_Amount();
+
+		Avito.exchange_good(Avito.Players[A_1], i_1, am_1, Avito.Players[A_2], i_2, am_2);
+	}
 	
+	Avito.printPlayersInventory();
+
 	return 0;
 }
