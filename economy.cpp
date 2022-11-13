@@ -124,13 +124,67 @@ public:
 		inv[Items::I_Food]++;
 	}
 
-	void CraftGood()
+	void CraftManufactGood()
 	{
 		inv[Items::I_Money]--;
 		inv[Items::I_Material]--;
 		inv[Items::I_Labour]--;
 		inv[Items::I_Manufact_good]++;
 	}
+
+//////////////////////////
+
+	void SellMaterial()
+	{
+		inv[Items::I_Money] += 5;
+		inv[Items::I_Material] -= 1;
+	}
+
+	void SellLabour()
+	{
+		inv[Items::I_Money] += 5;
+		inv[Items::I_Labour] -= 1;
+	}
+
+	void SellFood()
+	{
+		inv[Items::I_Money] += 5;
+		inv[Items::I_Food] -= 1;
+	}
+
+	void SellManufactGood()
+	{
+		inv[Items::I_Money] += 5;
+		inv[Items::I_Manufact_good] -= 1;
+	}
+
+//////////////////////////
+
+	void BuyMaterial()
+	{
+		inv[Items::I_Money] -= 5;
+		inv[Items::I_Material] += 1;
+	}
+
+	void BuyLabour()
+	{
+		inv[Items::I_Money] -= 5;
+		inv[Items::I_Labour] += 1;
+	}
+
+	void BuyFood()
+	{
+		inv[Items::I_Money] -= 5;
+		inv[Items::I_Food] += 1;
+	}
+
+	void BuyManufactGood()
+	{
+		inv[Items::I_Money] -= 5;
+		inv[Items::I_Manufact_good] += 1;
+	}
+
+//////////////////////////
 
 	void print_inventory()
 	{
@@ -153,6 +207,7 @@ public:
 			if (inv[i] < min_amount)
 			{
 				min_item = i;
+				min_amount = inv[i];
 			}
 		}
 
@@ -201,6 +256,40 @@ public:
 		A1->inv[good_type_1] -= good_amount_1;
 		A2->inv[good_type_1] += good_amount_1;
 		A2->inv[good_type_2] -= good_amount_2;
+	}
+
+	int findRichestAgent(int good_type)
+	{
+		int RichestAgent = 0;
+		int maxAmount = Players[0]->inv[good_type];
+
+		for (int i = 0; i < Players.size(); i++)
+		{
+			if (Players[i]->inv[good_type] > maxAmount)
+			{
+				RichestAgent = i;
+				maxAmount = Players[i]->inv[good_type];
+			}
+		}
+	}
+
+	void Stage_Buy()
+	{
+		//not implemented right now
+	}
+
+	void Stage_Craft()
+	{
+		//not implemented right now
+	}
+
+	void DayCicle()
+	{
+		//find what every Agent wants
+
+		//Stage_Buy for every Agent
+
+		//Stage_Craft for every Agent
 	}
 
 };
@@ -271,7 +360,7 @@ int main(void)
 
 	Avito.printPlayersInventory();
 
-
+//////////////////////////////////////////////////////////////////////////////
 	cout << "	100000 exchanges test" << endl;
 	int size = Avito.Players.size();
 	for (int i = 0; i < 100000; i++)
@@ -290,7 +379,10 @@ int main(void)
 
 		if (((Avito.Players[A_1]->inv[i_1] - am_1) > 0) && ((Avito.Players[A_2]->inv[i_2] - am_2) > 0))
 		{
-			Avito.exchange_good(Avito.Players[A_1], i_1, am_1, Avito.Players[A_2], i_2, am_2);
+			//Avito.exchange_good(Avito.Players[A_1], i_1, am_1, Avito.Players[A_2], i_2, am_2);
+
+
+
 		}
 	}
 	
