@@ -29,7 +29,7 @@ enum Actions
 	A_Last
 };
 
-typedef map<int, vector<int>> Receipts;
+typedef map<int, vector<int>> Receipts;//map<item_type, ingredients (to craft)>
 Receipts Menu;
 
 int random_int(int left_border, int right_border)
@@ -135,6 +135,40 @@ public:
 		inv[Items::I_Manufact_good]++;
 	}
 
+	void Craft(int item_type)
+	{
+		switch (item_type)
+		{
+		case I_Money:
+		{
+			CraftMoney();
+			break;
+		}
+		case I_Material:
+		{
+			CraftMaterial();
+			break;
+		}
+		case I_Labour:
+		{
+			CraftLabour();
+			break;
+		}
+		case I_Food:
+		{
+			CraftFood();
+			break;
+		}
+		case I_Manufact_good:
+		{
+			CraftManufactGood();
+			break;
+		}
+		default:
+			break;
+		}
+	}
+
 //////////////////////////
 
 	void SellMaterial()
@@ -223,12 +257,12 @@ public:
 	}
 	
 	//HowMuch
-	int HowMany(int item_type)
+	int HowMany(int item_type) const
 	{
-		return inv[item_type];
+		return inv.at(item_type);
 	}
 
-	vector<int> GetIngredients(int item_type)
+	vector<int> GetIngredients(int item_type) const
 	{
 		vector<int> ingr;
 
@@ -238,7 +272,7 @@ public:
 		//return Menu[item_type];
 	}
 
-	bool IfCraftable(int item_type)
+	bool IfCraftable(int item_type) const
 	{
 		/*cout << endl << "Menu[item_type].size() = " << Menu[item_type].size();
 		for (int i = 0; i < Menu[item_type].size(); i++)
@@ -440,13 +474,14 @@ int main(void)
 
 	Avito.printPlayersInventory();
 
-	cout << "	exchange test 2: " << endl;
+	/*cout << "	exchange test 2: " << endl;
 
 	Avito.exchange_good(Avito.Players[0], Items::I_Food, 8, Avito.Players[2], Items::I_Labour, 5);
-
-	Avito.printPlayersInventory();
+	*/
+	//Avito.printPlayersInventory();
 
 //////////////////////////////////////////////////////////////////////////////
+	/*
 	cout << "	100000 exchanges test" << endl;
 	int size = Avito.Players.size();
 	for (int i = 0; i < 100000; i++)
@@ -472,18 +507,39 @@ int main(void)
 		}
 	}
 	
+	*/
+
+
+	Avito.printPlayersInventory();
+
+	cout << "	Game cycles test" << endl;
+
+	for (int cycle = 0; cycle < 10; cycle++)//in-game cycles
+	{
+		cout << "cycle " << cycle << endl;
+		for (int queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
+		{
+			cout << "Agent #" << queue << " turn" << endl;
+			
+			cout << "Agent #" << queue << "inventory (before craft): " << endl;
+			Avito.Players[queue]->print_inventory();
+
+			int item = Avito.Players[queue]->findMin();// searching needed resource
+
+			if (Avito.Players[queue]->IfCraftable(item))//trying to craft it
+			{
+				cout << "Agent #" << queue << " crafted " << item << endl;
+				Avito.Players[queue]->Craft(item);
+
+				cout << "Agent #" << queue << "inventory (after craft): " << endl;
+				Avito.Players[queue]->print_inventory();
+			}
+		}
+	}
+
 	Avito.printPlayersInventory();
 
 
-	cout << endl << "	IFCRAFTABLE TEST" << endl;
-
-	Avito.Players[0]->inv[1] = 0;
-	Avito.Players[0]->inv[2] = 0;
-	Avito.Players[0]->inv[3] = 0;
-	Avito.Players[0]->inv[4] = 0;
-	Avito.Players[0]->inv[5] = 0;
-
-	Avito.Players[0]->print_inventory();
 
 	/*
 	cout << "	GetIngredients test" << endl;
@@ -493,6 +549,16 @@ int main(void)
 	cout << "ingred: {" << ingred[0] << ", " << ingred[1] << "}" << endl;
 	*/
 
+	/*cout << endl << "	IFCRAFTABLE TEST" << endl;
+
+	Avito.Players[0]->inv[1] = 0;
+	Avito.Players[0]->inv[2] = 0;
+	Avito.Players[0]->inv[3] = 0;
+	Avito.Players[0]->inv[4] = 0;
+	Avito.Players[0]->inv[5] = 0;
+
+	Avito.Players[0]->print_inventory();
+
 	if (Avito.Players[0]->IfCraftable(I_Food) == true)
 	{
 		cout << "we can craft this!" << endl;
@@ -501,7 +567,7 @@ int main(void)
 	{
 		cout << "failure!!!" << endl;
 	}
-	
+	*/
 
 
 	return 0;
