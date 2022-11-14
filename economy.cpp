@@ -29,6 +29,9 @@ enum Actions
 	A_Last
 };
 
+typedef map<int, vector<int>> Receipts;
+Receipts Menu;
+
 int random_int(int left_border, int right_border)
 {
 	return left_border + rand() % (right_border - left_border + 1);
@@ -214,6 +217,56 @@ public:
 		return min_item;
 	}
 
+	int WhatToCraft()
+	{
+		return findMin();
+	}
+	
+	//HowMuch
+	int HowMany(int item_type)
+	{
+		return inv[item_type];
+	}
+
+	vector<int> GetIngredients(int item_type)
+	{
+		vector<int> ingr;
+
+		ingr = Menu[item_type];
+
+		return ingr;
+		//return Menu[item_type];
+	}
+
+	bool IfCraftable(int item_type)
+	{
+		/*cout << endl << "Menu[item_type].size() = " << Menu[item_type].size();
+		for (int i = 0; i < Menu[item_type].size(); i++)
+		{
+			
+			cout << "inv[Menu[item_type][i]] = " << inv[Menu[item_type][i]];
+			
+			if (inv[Menu[item_type][i]] <= 0)
+			{
+				return false;
+				//remember the Menu[item_type][i]
+			}
+		}*/
+		
+		vector<int> ttt;
+		ttt = GetIngredients(item_type);
+
+		for (int i = 0; i < ttt.size(); i++)
+		{
+			if (HowMany(ttt[i]) <= 0)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
 };
 
 Agent* createPlayer()
@@ -273,6 +326,23 @@ public:
 		}
 	}
 
+	int HowManyAvailable(int item_type)
+	{
+		int Count = 0;
+		for (int i = 0; i < Players.size(); i++)
+		{
+			if (Players[i]->inv[item_type] != 0)
+			{
+				Count++;
+			}
+		}
+
+		return Count;
+	}
+
+	//coefficient = 1 / Count;
+	//price = base_price / coefficient;
+
 	void Stage_Buy()
 	{
 		//not implemented right now
@@ -291,6 +361,7 @@ public:
 
 		//Stage_Craft for every Agent
 	}
+
 
 };
 
@@ -348,6 +419,21 @@ int main(void)
 	BB->print_inventory();
 	*/
 
+/////////////////////////////////////////////////////////////
+ 
+	//typedef map<int, vector<int>> Receipts;
+	//Receipts Menu;
+
+	Menu[I_Money] = { I_Manufact_good };//instead of numbers must be elements from enum "Items"
+	Menu[I_Material] = {I_Money, I_Labour };
+	Menu[I_Labour] = {I_Food, I_Manufact_good };
+	Menu[I_Food] = { I_Money, I_Labour };
+	Menu[I_Manufact_good] = {I_Money, I_Material, I_Labour };
+
+	cout << "Menu 2,1 ---> " << Menu[2][1] << endl;
+
+/////////////////////////////////////////////////////////////
+
 	MarketPlace Avito;
 
 	Avito.Initialize(5);
@@ -387,6 +473,36 @@ int main(void)
 	}
 	
 	Avito.printPlayersInventory();
+
+
+	cout << endl << "	IFCRAFTABLE TEST" << endl;
+
+	Avito.Players[0]->inv[1] = 0;
+	Avito.Players[0]->inv[2] = 0;
+	Avito.Players[0]->inv[3] = 0;
+	Avito.Players[0]->inv[4] = 0;
+	Avito.Players[0]->inv[5] = 0;
+
+	Avito.Players[0]->print_inventory();
+
+	/*
+	cout << "	GetIngredients test" << endl;
+	vector<int> ingred;
+	ingred = Avito.Players[1]->GetIngredients(I_Labour);
+	cout << "ingred size = " << ingred.size() << endl;
+	cout << "ingred: {" << ingred[0] << ", " << ingred[1] << "}" << endl;
+	*/
+
+	if (Avito.Players[0]->IfCraftable(I_Food) == true)
+	{
+		cout << "we can craft this!" << endl;
+	}
+	else
+	{
+		cout << "failure!!!" << endl;
+	}
+	
+
 
 	return 0;
 }
