@@ -32,6 +32,9 @@ enum Actions
 typedef map<int, vector<int>> Receipts;//map<item_type, ingredients (to craft)>
 Receipts Menu;
 
+typedef map<int, double> Price;//map<item_type, ingredients (to craft)>
+Price Pricelist;
+
 int random_int(int left_border, int right_border)
 {
 	return left_border + rand() % (right_border - left_border + 1);
@@ -98,6 +101,8 @@ public:
 			//inv[i] = 10;
 			inv[i] = random_int(6, 15);
 		}
+
+		inv[Items::I_Money] = 50;
 	}
 
 	void CraftMoney()
@@ -171,54 +176,136 @@ public:
 
 //////////////////////////
 
+	void SellMoney()
+	{
+		//inv[I_Money] += Pricelist[I_Money];
+		//inv[I_Money] -= Pricelist[I_Money];
+		cout << "";
+	}
+
 	void SellMaterial()
 	{
-		inv[Items::I_Money] += 5;
-		inv[Items::I_Material] -= 1;
+		inv[I_Money] += Pricelist[I_Material];
+		inv[I_Material]--;
 	}
 
 	void SellLabour()
 	{
-		inv[Items::I_Money] += 5;
-		inv[Items::I_Labour] -= 1;
+		inv[Items::I_Money] += Pricelist[I_Labour];
+		inv[Items::I_Labour]--;
 	}
 
 	void SellFood()
 	{
-		inv[Items::I_Money] += 5;
-		inv[Items::I_Food] -= 1;
+		inv[Items::I_Money] += Pricelist[I_Food];
+		inv[Items::I_Food]--;
 	}
 
 	void SellManufactGood()
 	{
-		inv[Items::I_Money] += 5;
-		inv[Items::I_Manufact_good] -= 1;
+		inv[Items::I_Money] += Pricelist[I_Manufact_good];
+		inv[Items::I_Manufact_good]--;
+	}
+
+	void Sell(int item_type)
+	{
+		switch (item_type)
+		{
+		case I_Money:
+		{
+			SellMoney();
+			break;
+		}
+		case I_Material:
+		{
+			SellMaterial();
+			break;
+		}
+		case I_Labour:
+		{
+			SellLabour();
+			break;
+		}
+		case I_Food:
+		{
+			SellFood();
+			break;
+		}
+		case I_Manufact_good:
+		{
+			SellManufactGood();
+			break;
+		}
+		default:
+			break;
+		}
 	}
 
 //////////////////////////
 
+	void BuyMoney()
+	{
+		//inv[I_Money] -= Pricelist[I_Money];
+		//inv[I_Money] += Pricelist[I_Money];
+		cout << "";
+	}
+
 	void BuyMaterial()
 	{
-		inv[Items::I_Money] -= 5;
-		inv[Items::I_Material] += 1;
+		inv[Items::I_Money] -= Pricelist[I_Material];
+		inv[Items::I_Material]++;
 	}
 
 	void BuyLabour()
 	{
-		inv[Items::I_Money] -= 5;
-		inv[Items::I_Labour] += 1;
+		inv[Items::I_Money] -= Pricelist[I_Labour];
+		inv[Items::I_Labour]++;
 	}
 
 	void BuyFood()
 	{
-		inv[Items::I_Money] -= 5;
-		inv[Items::I_Food] += 1;
+		inv[Items::I_Money] -= Pricelist[I_Food];
+		inv[Items::I_Food]++;
 	}
 
 	void BuyManufactGood()
 	{
-		inv[Items::I_Money] -= 5;
-		inv[Items::I_Manufact_good] += 1;
+		inv[Items::I_Money] -= Pricelist[I_Manufact_good];
+		inv[Items::I_Manufact_good]++;
+	}
+
+	void Buy(int item_type)
+	{
+		switch (item_type)
+		{
+		case I_Money:
+		{
+			BuyMoney();
+			break;
+		}
+		case I_Material:
+		{
+			BuyMaterial();
+			break;
+		}
+		case I_Labour:
+		{
+			BuyLabour();
+			break;
+		}
+		case I_Food:
+		{
+			BuyFood();
+			break;
+		}
+		case I_Manufact_good:
+		{
+			BuyManufactGood();
+			break;
+		}
+		default:
+			break;
+		}
 	}
 
 //////////////////////////
@@ -256,7 +343,6 @@ public:
 		return findMin();
 	}
 	
-	//HowMuch
 	int HowMany(int item_type) const
 	{
 		return inv.at(item_type);
@@ -274,19 +360,6 @@ public:
 
 	bool IfCraftable(int item_type) const
 	{
-		/*cout << endl << "Menu[item_type].size() = " << Menu[item_type].size();
-		for (int i = 0; i < Menu[item_type].size(); i++)
-		{
-			
-			cout << "inv[Menu[item_type][i]] = " << inv[Menu[item_type][i]];
-			
-			if (inv[Menu[item_type][i]] <= 0)
-			{
-				return false;
-				//remember the Menu[item_type][i]
-			}
-		}*/
-		
 		vector<int> ttt;
 		ttt = GetIngredients(item_type);
 
@@ -300,6 +373,19 @@ public:
 
 		return true;
 	}
+
+	bool IfBuyable(int item_type) const
+	{
+		//so if we look on the price, then its just price check (affordable or not)
+		if (inv.at(I_Money) < Pricelist[item_type])
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	//bool IfTradeable?? (like barther)
 
 };
 
@@ -373,6 +459,8 @@ public:
 
 		return Count;
 	}
+
+	//void Trade(<Seller>, <Client>, <resource>)
 
 	//coefficient = 1 / Count;
 	//price = base_price / coefficient;
@@ -464,7 +552,15 @@ int main(void)
 	Menu[I_Food] = { I_Money, I_Labour };
 	Menu[I_Manufact_good] = {I_Money, I_Material, I_Labour };
 
-	cout << "Menu 2,1 ---> " << Menu[2][1] << endl;
+	//cout << "Menu 2,1 ---> " << Menu[2][1] << endl;
+
+/////////////////////////////////////////////////////////////
+
+	Pricelist[I_Money] = 1;
+	Pricelist[I_Material] = 5;
+	Pricelist[I_Labour] = 5;
+	Pricelist[I_Food] = 5;
+	Pricelist[I_Manufact_good] = 5;
 
 /////////////////////////////////////////////////////////////
 
@@ -509,10 +605,10 @@ int main(void)
 	
 	*/
 
+//////////////////////////////////////////////////////////////////////////////
+/*	Avito.printPlayersInventory();
 
-	Avito.printPlayersInventory();
-
-	cout << "	Game cycles test" << endl;
+	cout << "	Game cycles test STAGE CRAFT" << endl;
 
 	for (int cycle = 0; cycle < 10; cycle++)//in-game cycles
 	{
@@ -538,8 +634,43 @@ int main(void)
 	}
 
 	Avito.printPlayersInventory();
+*/
+//////////////////////////////////////////////////////////////////////////////
 
+	cout << "	Game cycles test PURCHASE STAGE (not between themselves)" << endl;
 
+	for (int cycle = 0; cycle < 10; cycle++)//in-game cycles
+	{
+		cout << "cycle " << cycle << endl;
+		for (int queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
+		{
+			cout << "Agent #" << queue << " turn" << endl;
+
+			cout << "Agent #" << queue << "inventory (before buy): " << endl;
+			Avito.Players[queue]->print_inventory();
+
+			int item = Avito.Players[queue]->findMin();// searching needed resource
+
+			if (Avito.Players[queue]->IfBuyable(item))//trying to craft it
+			{
+				cout << "Agent #" << queue << " purchased " << item << endl;
+				Avito.Players[queue]->Buy(item);
+
+				cout << "Agent #" << queue << " inventory (after purchase): " << endl;
+				Avito.Players[queue]->print_inventory();
+			}
+			else
+			{
+				cout << "Agent #" << queue << " cannot afford " << item << endl;
+			}
+		}
+	}
+
+	cout << "	END OF PURCHASE STAGE" << endl;
+
+	Avito.printPlayersInventory();
+
+//////////////////////////////////////////////////////////////////////////////
 
 	/*
 	cout << "	GetIngredients test" << endl;
@@ -568,6 +699,26 @@ int main(void)
 		cout << "failure!!!" << endl;
 	}
 	*/
+/*
+	cout << endl << "	IFBUYABLE TEST" << endl;
+
+	Avito.Players[0]->inv[1] = 50;
+	Avito.Players[0]->inv[2] = 0;
+	Avito.Players[0]->inv[3] = 0;
+	Avito.Players[0]->inv[4] = 0;
+	Avito.Players[0]->inv[5] = 0;
+
+	Avito.Players[0]->print_inventory();
+
+	if (Avito.Players[0]->IfBuyable(I_Food) == true)
+	{
+		cout << "we can buy this!" << endl;
+	}
+	else
+	{
+		cout << "failure!!!" << endl;
+	}
+*/
 
 
 	return 0;
