@@ -431,7 +431,7 @@ public:
 		A2->inv[good_type_2] -= good_amount_2;
 	}
 
-	int findRichestAgent(int good_type)
+	Agent* findRichestAgent(int good_type)
 	{
 		int RichestAgent = 0;
 		int maxAmount = Players[0]->inv[good_type];
@@ -444,6 +444,26 @@ public:
 				maxAmount = Players[i]->inv[good_type];
 			}
 		}
+
+		//return RichestAgent;
+		return Players[RichestAgent];
+	}
+
+	int findRichestAgentNumber(int good_type)
+	{
+		int RichestAgent = 0;
+		int maxAmount = Players[0]->inv[good_type];
+
+		for (int i = 0; i < Players.size(); i++)
+		{
+			if (Players[i]->inv[good_type] > maxAmount)
+			{
+				RichestAgent = i;
+				maxAmount = Players[i]->inv[good_type];
+			}
+		}
+
+		return RichestAgent;
 	}
 
 	int HowManyAvailable(int item_type)
@@ -460,7 +480,12 @@ public:
 		return Count;
 	}
 
-	//void Trade(<Seller>, <Client>, <resource>)
+	//void Trade(<Seller>, <Client>, <resource>, <price>)
+	void Trade(Agent* Seller, Agent* Client, int item_type)
+	{
+		Seller->Sell(item_type);
+		Client->Buy(item_type);
+	}
 
 	//coefficient = 1 / Count;
 	//price = base_price / coefficient;
@@ -636,28 +661,44 @@ int main(void)
 	Avito.printPlayersInventory();
 */
 //////////////////////////////////////////////////////////////////////////////
+	
+	cout << "	Game cycles test PURCHASE STAGE (between themselves)" << endl;
 
-	cout << "	Game cycles test PURCHASE STAGE (not between themselves)" << endl;
-
-	for (int cycle = 0; cycle < 10; cycle++)//in-game cycles
+	for (int cycle = 0; cycle < 1; cycle++)//in-game cycles
 	{
 		cout << "cycle " << cycle << endl;
 		for (int queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
 		{
 			cout << "Agent #" << queue << " turn" << endl;
 
-			cout << "Agent #" << queue << "inventory (before buy): " << endl;
-			Avito.Players[queue]->print_inventory();
+			//cout << "Agent #" << queue << " inventory (before purchase) [CLIENT]: " << endl;
+			//Avito.Players[queue]->print_inventory();
 
 			int item = Avito.Players[queue]->findMin();// searching needed resource
 
-			if (Avito.Players[queue]->IfBuyable(item))//trying to craft it
-			{
-				cout << "Agent #" << queue << " purchased " << item << endl;
-				Avito.Players[queue]->Buy(item);
+			Agent* Seller;
+			int SellerNum;
 
-				cout << "Agent #" << queue << " inventory (after purchase): " << endl;
+			Seller = Avito.findRichestAgent(item);//searching richest agent of needed resource
+			SellerNum = Avito.findRichestAgentNumber(item);
+
+			if (Avito.Players[queue]->IfBuyable(item))//trying to buy it
+			{
+				cout << "Agent #" << queue << " tried to trade with Agent #" << SellerNum << endl << endl;
+
+				cout << "Agent #" << queue << " inventory (before purchase) [CLIENT]: " << endl;
 				Avito.Players[queue]->print_inventory();
+				cout << "Agent #" << SellerNum << " inventory (before purchase) [SELLER]: " << endl;
+				Seller->print_inventory();
+
+				cout << "----> Agent #" << queue << " purchased " << item << "<----"  << endl << endl;
+				//Avito.Players[queue]->Buy(item);
+				Avito.Trade(Seller, Avito.Players[queue], item);
+
+				cout << "Agent #" << queue << " inventory (after purchase) [CLIENT]: " << endl;
+				Avito.Players[queue]->print_inventory();
+				cout << "Agent #" << SellerNum << " inventory (after purchase) [SELLER]: " << endl;
+				Seller->print_inventory();
 			}
 			else
 			{
@@ -667,7 +708,7 @@ int main(void)
 	}
 
 	cout << "	END OF PURCHASE STAGE" << endl;
-
+	
 	Avito.printPlayersInventory();
 
 //////////////////////////////////////////////////////////////////////////////
@@ -720,6 +761,10 @@ int main(void)
 	}
 */
 
-
+/*
+	cout << "	 TRADE TEST" << endl;
+	Avito.Trade(Avito.Players[0], Avito.Players[1], 4);
+	Avito.printPlayersInventory();
+*/
 	return 0;
 }
