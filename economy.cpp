@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <iomanip>
 
 using namespace std;
 
@@ -321,6 +322,15 @@ public:
 		cout << endl;
 	}
 
+	void print_inv()
+	{
+		for (int i = Items::I_First; i < Items::I_Last; i++)
+		{
+			cout << "|" << setw(4) << inv[i] << " ";
+		}
+		cout << endl;
+	}
+
 	int findMin()// here we find item with the least amount
 	{
 		int min_item = Items::I_First;
@@ -420,6 +430,17 @@ public:
 		{
 			cout << "Player " << i << endl;
 			Players[i]->print_inventory();
+		}
+	}
+
+	void printPlayersInv()
+	{
+		cout << "  . |  Mo | Ma  |  L  |  F  | Mg |" << endl;
+
+		for (int i = 0; i < Players.size(); i++)
+		{
+			cout << "AG" << i << " ";
+			Players[i]->print_inv();
 		}
 	}
 
@@ -593,7 +614,8 @@ int main(void)
 
 	Avito.Initialize(5);
 
-	Avito.printPlayersInventory();
+	//Avito.printPlayersInventory();
+	Avito.printPlayersInv();
 
 	/*cout << "	exchange test 2: " << endl;
 
@@ -671,9 +693,6 @@ int main(void)
 		{
 			cout << "Agent #" << queue << " turn" << endl;
 
-			//cout << "Agent #" << queue << " inventory (before purchase) [CLIENT]: " << endl;
-			//Avito.Players[queue]->print_inventory();
-
 			int item = Avito.Players[queue]->findMin();// searching needed resource
 
 			Agent* Seller;
@@ -685,20 +704,15 @@ int main(void)
 			if (Avito.Players[queue]->IfBuyable(item))//trying to buy it
 			{
 				cout << "Agent #" << queue << " tried to trade with Agent #" << SellerNum << endl << endl;
-
-				cout << "Agent #" << queue << " inventory (before purchase) [CLIENT]: " << endl;
-				Avito.Players[queue]->print_inventory();
-				cout << "Agent #" << SellerNum << " inventory (before purchase) [SELLER]: " << endl;
-				Seller->print_inventory();
+				
+				cout << "Data before trade: " << endl;
+				Avito.printPlayersInv();
 
 				cout << "----> Agent #" << queue << " purchased " << item << "<----"  << endl << endl;
-				//Avito.Players[queue]->Buy(item);
 				Avito.Trade(Seller, Avito.Players[queue], item);
 
-				cout << "Agent #" << queue << " inventory (after purchase) [CLIENT]: " << endl;
-				Avito.Players[queue]->print_inventory();
-				cout << "Agent #" << SellerNum << " inventory (after purchase) [SELLER]: " << endl;
-				Seller->print_inventory();
+				cout << "Data after trade: " << endl;
+				Avito.printPlayersInv();
 			}
 			else
 			{
@@ -709,7 +723,7 @@ int main(void)
 
 	cout << "	END OF PURCHASE STAGE" << endl;
 	
-	Avito.printPlayersInventory();
+	Avito.printPlayersInv();
 
 //////////////////////////////////////////////////////////////////////////////
 
