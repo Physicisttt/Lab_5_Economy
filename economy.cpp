@@ -5,8 +5,6 @@
 
 using namespace std;
 
-const int items = 5;
-
 typedef map<int, int> inventory;//map<item_type, item_amount>
 
 enum Items
@@ -33,7 +31,7 @@ enum Actions
 typedef map<int, vector<int>> Receipts;//map<item_type, ingredients (to craft)>
 Receipts Menu;
 
-typedef map<int, double> Price;//map<item_type, ingredients (to craft)>
+typedef map<int, int> Price;//map<item_type, ingredients (to craft)>
 Price Pricelist;
 
 int random_int(int left_border, int right_border)
@@ -100,7 +98,7 @@ public:
 		{
 			//inv[i] = 0;
 			//inv[i] = 10;
-			inv[i] = random_int(6, 15);
+			inv[i] = random_int(0, 15);
 		}
 
 		inv[Items::I_Money] = 50;
@@ -177,64 +175,64 @@ public:
 
 //////////////////////////
 
-	void SellMoney()
+	void SellMoney(int koeff)
 	{
 		//inv[I_Money] += Pricelist[I_Money];
 		//inv[I_Money] -= Pricelist[I_Money];
 		cout << "";
 	}
 
-	void SellMaterial()
+	void SellMaterial(int koeff)
 	{
-		inv[I_Money] += Pricelist[I_Material];
+		inv[I_Money] += (Pricelist[I_Material] - koeff);
 		inv[I_Material]--;
 	}
 
-	void SellLabour()
+	void SellLabour(int koeff)
 	{
-		inv[Items::I_Money] += Pricelist[I_Labour];
+		inv[Items::I_Money] += (Pricelist[I_Labour] - koeff);
 		inv[Items::I_Labour]--;
 	}
 
-	void SellFood()
+	void SellFood(int koeff)
 	{
-		inv[Items::I_Money] += Pricelist[I_Food];
+		inv[Items::I_Money] += (Pricelist[I_Food] - koeff);
 		inv[Items::I_Food]--;
 	}
-
-	void SellManufactGood()
+	
+	void SellManufactGood(int koeff)
 	{
-		inv[Items::I_Money] += Pricelist[I_Manufact_good];
+		inv[Items::I_Money] += (Pricelist[I_Manufact_good] - koeff);
 		inv[Items::I_Manufact_good]--;
 	}
 
-	void Sell(int item_type)
+	void Sell(int item_type, int koeff)
 	{
 		switch (item_type)
 		{
 		case I_Money:
 		{
-			SellMoney();
+			SellMoney(koeff);
 			break;
 		}
 		case I_Material:
 		{
-			SellMaterial();
+			SellMaterial(koeff);
 			break;
 		}
 		case I_Labour:
 		{
-			SellLabour();
+			SellLabour(koeff);
 			break;
 		}
 		case I_Food:
 		{
-			SellFood();
+			SellFood(koeff);
 			break;
 		}
 		case I_Manufact_good:
 		{
-			SellManufactGood();
+			SellManufactGood(koeff);
 			break;
 		}
 		default:
@@ -244,64 +242,64 @@ public:
 
 //////////////////////////
 
-	void BuyMoney()
+	void BuyMoney(int koeff)
 	{
 		//inv[I_Money] -= Pricelist[I_Money];
 		//inv[I_Money] += Pricelist[I_Money];
 		cout << "";
 	}
 
-	void BuyMaterial()
+	void BuyMaterial(int koeff)
 	{
-		inv[Items::I_Money] -= Pricelist[I_Material];
+		inv[Items::I_Money] -= (Pricelist[I_Material] - koeff);
 		inv[Items::I_Material]++;
 	}
 
-	void BuyLabour()
+	void BuyLabour(int koeff)
 	{
-		inv[Items::I_Money] -= Pricelist[I_Labour];
+		inv[Items::I_Money] -= (Pricelist[I_Labour] - koeff);
 		inv[Items::I_Labour]++;
 	}
 
-	void BuyFood()
+	void BuyFood(int koeff)
 	{
-		inv[Items::I_Money] -= Pricelist[I_Food];
+		inv[Items::I_Money] -= (Pricelist[I_Food] - koeff);
 		inv[Items::I_Food]++;
 	}
 
-	void BuyManufactGood()
+	void BuyManufactGood(int koeff)
 	{
-		inv[Items::I_Money] -= Pricelist[I_Manufact_good];
+		inv[Items::I_Money] -= (Pricelist[I_Manufact_good] - koeff);
 		inv[Items::I_Manufact_good]++;
 	}
 
-	void Buy(int item_type)
+	void Buy(int item_type, int koeff)
 	{
 		switch (item_type)
 		{
 		case I_Money:
 		{
-			BuyMoney();
+			BuyMoney(koeff);
 			break;
 		}
 		case I_Material:
 		{
-			BuyMaterial();
+			BuyMaterial(koeff);
 			break;
 		}
 		case I_Labour:
 		{
-			BuyLabour();
+			BuyLabour(koeff);
 			break;
 		}
 		case I_Food:
 		{
-			BuyFood();
+			BuyFood(koeff);
 			break;
 		}
 		case I_Manufact_good:
 		{
-			BuyManufactGood();
+			BuyManufactGood(koeff);
 			break;
 		}
 		default:
@@ -368,6 +366,7 @@ public:
 		//return Menu[item_type];
 	}
 
+	//rework!!!!!!!!!!!
 	bool IfCraftable(int item_type) const
 	{
 		vector<int> ttt;
@@ -384,6 +383,7 @@ public:
 		return true;
 	}
 
+	//rework!!!!!!!!!!!
 	bool IfBuyable(int item_type) const
 	{
 		//so if we look on the price, then its just price check (affordable or not)
@@ -504,8 +504,8 @@ public:
 	//void Trade(<Seller>, <Client>, <resource>, <price>)
 	void Trade(Agent* Seller, Agent* Client, int item_type)
 	{
-		Seller->Sell(item_type);
-		Client->Buy(item_type);
+		Seller->Sell(item_type, HowManyAvailable(item_type));
+		Client->Buy(item_type, HowManyAvailable(item_type));//HERE////////////////////////////////////////////!!!!!!!!!!!!!
 	}
 
 	//coefficient = 1 / Count;
@@ -686,15 +686,15 @@ int main(void)
 	
 	cout << "	Game cycles test PURCHASE STAGE (between themselves)" << endl;
 
-	for (int cycle = 0; cycle < 1; cycle++)//in-game cycles
+	for (int cycle = 0; cycle < 10; cycle++)//in-game cycles
 	{
 		cout << "cycle " << cycle << endl;
 		for (int queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
 		{
 			cout << "Agent #" << queue << " turn" << endl;
-
+			
 			int item = Avito.Players[queue]->findMin();// searching needed resource
-
+			
 			Agent* Seller;
 			int SellerNum;
 
@@ -709,8 +709,9 @@ int main(void)
 				Avito.printPlayersInv();
 
 				cout << "----> Agent #" << queue << " purchased " << item << "<----"  << endl << endl;
+				
 				Avito.Trade(Seller, Avito.Players[queue], item);
-
+				
 				cout << "Data after trade: " << endl;
 				Avito.printPlayersInv();
 			}
