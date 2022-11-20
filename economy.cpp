@@ -5,8 +5,6 @@
 
 using namespace std;
 
-typedef map<int, int> inventory;//map<item_type, item_amount>
-
 enum Items
 {
 	I_First = 1,
@@ -28,7 +26,9 @@ enum Actions
 	A_Last
 };
 
-typedef map<int, vector<int>> Receipts;//map<item_type, ingredients (to craft)>
+typedef map<int, int> inventory;//map<item_type, item_amount>
+
+typedef map<int, vector<int> > Receipts;//map<item_type, ingredients (to craft)>
 Receipts Menu;
 
 typedef map<int, int> Price;//map<item_type, ingredients (to craft)>
@@ -46,7 +46,7 @@ int random_Actor(int vector_size)//this function will be used in the future
 
 int random_Action()
 {
-	return random_int(Actions::A_First, Actions::A_Last);//this function will be used in the future
+	return random_int(Actions::A_First, Actions::A_Last - 1);//this function will be used in the future
 }
 
 int random_Item()
@@ -77,75 +77,6 @@ public:
 		}
 
 		inv[Items::I_Money] = 50;
-	}
-
-	void CraftMoney()
-	{
-		inv[Items::I_Manufact_good]--;
-		inv[Items::I_Money]++;
-	}
-
-	void CraftMaterial()
-	{
-		inv[Items::I_Money]--;
-		inv[Items::I_Labour]--;
-		inv[Items::I_Material]++;
-	}
-
-	void CraftLabour()
-	{
-		inv[Items::I_Food]--;
-		inv[Items::I_Manufact_good]--;
-		inv[Items::I_Labour]++;
-	}
-
-	void CraftFood()
-	{
-		inv[Items::I_Money]--;
-		inv[Items::I_Labour]--;
-		inv[Items::I_Food]++;
-	}
-
-	void CraftManufactGood()
-	{
-		inv[Items::I_Money]--;
-		inv[Items::I_Material]--;
-		inv[Items::I_Labour]--;
-		inv[Items::I_Manufact_good]++;
-	}
-
-	void Craft(int item_type)
-	{
-		switch (item_type)
-		{
-		case I_Money:
-		{
-			CraftMoney();
-			break;
-		}
-		case I_Material:
-		{
-			CraftMaterial();
-			break;
-		}
-		case I_Labour:
-		{
-			CraftLabour();
-			break;
-		}
-		case I_Food:
-		{
-			CraftFood();
-			break;
-		}
-		case I_Manufact_good:
-		{
-			CraftManufactGood();
-			break;
-		}
-		default:
-			break;
-		}
 	}
 
 //////////////////////////
@@ -304,7 +235,46 @@ public:
 		cout << endl;
 	}
 
-	int findMin()// here we find item with the least amount
+	Items IntToEnum(int item)
+	{
+		switch (item)
+		{
+			case I_Money:
+			{
+				return I_Money;
+				break;
+			}
+			case I_Material:
+			{
+				return I_Material;
+				break;
+			}
+			case I_Labour:
+			{
+				return I_Labour;
+				break;
+			}
+			case I_Food:
+			{
+				return I_Food;
+				break;
+			}
+			case I_Manufact_good:
+			{
+				return I_Manufact_good;
+				break;
+			}
+			default:
+			{
+				cout << "something wrong in IntToEnum" << endl;
+				return I_Last;
+				break;
+			}
+				
+		}
+	}
+
+	Items findMin()// here we find item with the least amount
 	{
 		int min_item = Items::I_First;
 		int min_amount = inv[Items::I_First];
@@ -318,12 +288,9 @@ public:
 			}
 		}
 
-		return min_item;
-	}
+		return IntToEnum(min_item);
 
-	int WhatToCraft()
-	{
-		return findMin();
+		//return min_item;
 	}
 	
 	//rework!!!!!!!!!!!
@@ -343,13 +310,12 @@ public:
 
 Agent* createPlayer()
 {
-	Agent* A = new Agent;
-	return A;
+	return new Agent;
 }
 
 void fillMarketPlace(vector<Agent*>& vec)
 {
-	for (int i = 0; i < vec.size(); i++)
+	for (size_t i = 0; i < vec.size(); i++)
 	{
 		vec[i] = createPlayer();
 	}
@@ -359,11 +325,29 @@ void fillMarketPlace(vector<Agent*>& vec)
 class Good
 {
 public:
-	int cost = 0;
 	int prod_time = 0;
-	vector<int> Needed;
+	vector<int> Required_items;
 
 	virtual void print() = 0;
+
+	int HowManyItems(Agent* agent, int item_type) const
+	{
+		return agent->inv.at(item_type);
+	}
+
+	virtual bool IfCraftable(Agent* agent) const = 0;
+
+	virtual void ResourcePayment(Agent* agent)
+	{
+		for (size_t i = 0; i < Required_items.size(); i++)
+		{
+			agent->inv[ Required_items[i] ]--;
+		}
+	}
+
+	virtual void Craft(Agent* agent) = 0;
+
+	//virtual void Buy(Agent*, int item_type, int price) = 0;
 };
 
 class Money : public Good
@@ -372,35 +356,35 @@ public:
 
 	Money()
 	{
-		Needed.resize(1);
+		//Required_items.push_back(I_Manufact_good);
 
-		Needed[0] = I_Manufact_good;
+		Required_items.resize(1);
+		Required_items[0] = I_Manufact_good;
 	}
 
 	void print()
 	{
-		cout << "ttt";
+		cout << "empty cout";
 	}
 
-	int HowMany(Agent* Client, int item_type) const
+	bool IfCraftable(Agent* agent) const override
 	{
-		return Client->inv.at(item_type);
-	}
-
-	bool IfCraftable(Agent* Client) const
-	{
-		vector<int> ttt;//ingredients
-		ttt = Needed;
-
-		for (int i = 0; i < Needed.size(); i++)
+		for (size_t i = 0; i < Required_items.size(); i++)
 		{
-			if (HowMany(Client, Needed[i]) <= 0)
+			if (HowManyItems(agent, Required_items[i]) <= 0)
 			{
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	void Craft(Agent* agent) override
+	{
+		//ResourcePayment(agent);
+		agent->inv[I_Manufact_good]--;
+		agent->inv[I_Money]++;
 	}
 };
 
@@ -409,36 +393,34 @@ class Material : public Good
 public:
 	Material()
 	{
-		Needed.resize(2);
-
-		Needed[0] = I_Money;
-		Needed[1] = I_Labour;
+		Required_items.resize(2);
+		Required_items[0] = I_Money;
+		Required_items[1] = I_Labour;
 	}
 
 	void print()
 	{
-		cout << "ttt";
+		cout << "empty cout";
 	}
 
-	int HowMany(Agent* Client, int item_type) const
+	bool IfCraftable(Agent* agent) const override
 	{
-		return Client->inv.at(item_type);
-	}
-
-	bool IfCraftable(Agent* Client) const
-	{
-		vector<int> ttt;//ingredients
-		ttt = Needed;
-
-		for (int i = 0; i < Needed.size(); i++)
+		for (size_t i = 0; i < Required_items.size(); i++)
 		{
-			if (HowMany(Client, Needed[i]) <= 0)
+			if (HowManyItems(agent, Required_items[i]) <= 0)
 			{
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	void Craft(Agent* agent) override
+	{
+		agent->inv[I_Money]--;
+		agent->inv[I_Labour]--;
+		agent->inv[I_Material]++;
 	}
 
 };
@@ -448,36 +430,34 @@ class Labour : public Good
 public:
 	Labour()
 	{
-		Needed.resize(2);
-
-		Needed[0] = I_Food;
-		Needed[1] = I_Manufact_good;
+		Required_items.resize(2);
+		Required_items[0] = I_Food;
+		Required_items[1] = I_Manufact_good;
 	}
 
 	void print()
 	{
-		cout << "ttt";
+		cout << "empty cout";
 	}
 
-	int HowMany(Agent* Client, int item_type) const
+	bool IfCraftable(Agent* agent) const override
 	{
-		return Client->inv.at(item_type);
-	}
-
-	bool IfCraftable(Agent* Client) const
-	{
-		vector<int> ttt;//ingredients
-		ttt = Needed;
-
-		for (int i = 0; i < Needed.size(); i++)
+		for (size_t i = 0; i < Required_items.size(); i++)
 		{
-			if (HowMany(Client, Needed[i]) <= 0)
+			if (HowManyItems(agent, Required_items[i]) <= 0)
 			{
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	void Craft(Agent* agent) override
+	{
+		agent->inv[I_Food]--;
+		agent->inv[I_Manufact_good]--;
+		agent->inv[I_Labour]++;
 	}
 };
 
@@ -486,36 +466,34 @@ class Food : public Good
 public:
 	Food()
 	{
-		Needed.resize(2);
-
-		Needed[0] = I_Money;
-		Needed[1] = I_Labour;
+		Required_items.resize(2);
+		Required_items[0] = I_Money;
+		Required_items[1] = I_Labour;
 	}
 
 	void print()
 	{
-		cout << "ttt";
+		cout << "empty cout";
 	}
 
-	int HowMany(Agent* Client, int item_type) const
+	bool IfCraftable(Agent* agent) const override
 	{
-		return Client->inv.at(item_type);
-	}
-
-	bool IfCraftable(Agent* Client) const
-	{
-		vector<int> ttt;//ingredients
-		ttt = Needed;
-
-		for (int i = 0; i < Needed.size(); i++)
+		for (size_t i = 0; i < Required_items.size(); i++)
 		{
-			if (HowMany(Client, Needed[i]) <= 0)
+			if (HowManyItems(agent, Required_items[i]) <= 0)
 			{
 				return false;
 			}
 		}
 
 		return true;
+	}
+
+	void Craft(Agent* agent) override
+	{
+		agent->inv[I_Money]--;
+		agent->inv[I_Labour]--;
+		agent->inv[I_Food]++;
 	}
 };
 
@@ -524,11 +502,10 @@ class Manufact_good : public Good
 public:
 	Manufact_good()
 	{
-		Needed.resize(3);
-
-		Needed[0] = I_Money;
-		Needed[1] = I_Material;
-		Needed[2] = I_Labour;
+		Required_items.resize(3);
+		Required_items[0] = I_Money;
+		Required_items[1] = I_Material;
+		Required_items[2] = I_Labour;
 	}
 
 	void print()
@@ -536,19 +513,11 @@ public:
 		cout << "ttt";
 	}
 
-	int HowMany(Agent* Client, int item_type) const
+	bool IfCraftable(Agent* agent) const override
 	{
-		return Client->inv.at(item_type);
-	}
-
-	bool IfCraftable(Agent* Client) const
-	{
-		vector<int> ttt;//ingredients
-		ttt = Needed;
-
-		for (int i = 0; i < Needed.size(); i++)
+		for (size_t i = 0; i < Required_items.size(); i++)
 		{
-			if (HowMany(Client, Needed[i]) <= 0)
+			if (HowManyItems(agent, Required_items[i]) <= 0)
 			{
 				return false;
 			}
@@ -556,7 +525,20 @@ public:
 
 		return true;
 	}
+
+	void Craft(Agent* agent)
+	{
+		agent->inv[Items::I_Money]--;
+		agent->inv[Items::I_Material]--;
+		agent->inv[Items::I_Labour]--;
+		agent->inv[Items::I_Manufact_good]++;
+	}
 };
+
+//////////////////////GoodType/////////////////////////////////
+
+typedef map<Items, Good*> GoodType;
+GoodType GoodTypeList;
 
 ///////////////////////////MarketPlace//////////////////////////////////
 
@@ -573,7 +555,7 @@ public:
 
 	void printPlayersInventory()
 	{
-		for (int i = 0; i < Players.size(); i++)
+		for (size_t i = 0; i < Players.size(); i++)
 		{
 			cout << "Player " << i << endl;
 			Players[i]->print_inventory();
@@ -584,7 +566,7 @@ public:
 	{
 		cout << "  . |  Mo | Ma  |  L  |  F  | Mg |" << endl;
 
-		for (int i = 0; i < Players.size(); i++)
+		for (size_t i = 0; i < Players.size(); i++)
 		{
 			cout << "AG" << i << " ";
 			Players[i]->print_inv();
@@ -604,7 +586,7 @@ public:
 		int RichestAgent = 0;
 		int maxAmount = Players[0]->inv[good_type];
 
-		for (int i = 0; i < Players.size(); i++)
+		for (size_t i = 0; i < Players.size(); i++)
 		{
 			if (Players[i]->inv[good_type] > maxAmount)
 			{
@@ -622,7 +604,7 @@ public:
 		int RichestAgent = 0;
 		int maxAmount = Players[0]->inv[good_type];
 
-		for (int i = 0; i < Players.size(); i++)
+		for (size_t i = 0; i < Players.size(); i++)
 		{
 			if (Players[i]->inv[good_type] > maxAmount)
 			{
@@ -637,7 +619,7 @@ public:
 	int HowManyAvailable(int item_type)
 	{
 		int Count = 0;
-		for (int i = 0; i < Players.size(); i++)
+		for (size_t i = 0; i < Players.size(); i++)
 		{
 			if (Players[i]->inv[item_type] != 0)
 			{
@@ -676,6 +658,10 @@ public:
 
 
 };
+
+////////////////////////////////////////////////////////////////
+
+
 
 ////////////////////////////Main////////////////////////////////
 
@@ -762,6 +748,23 @@ int main(void)
 	Food Foo;
 	Manufact_good ManG;
 
+	Good* pGoo;
+
+	Money* pMon = &Mon;
+	Labour* pLab = &Lab;
+	Material* pMat = &Mat;
+	Food* pFoo = &Foo;
+	Manufact_good* pManG = &ManG;
+
+	//typedef map<Items, Good*> GoodType;//map<item_type, good_type*>
+	//GoodType GoodTypeList;
+
+	GoodTypeList[I_Money] = pMon;
+	GoodTypeList[I_Labour] = pLab;
+	GoodTypeList[I_Material] = pMat;
+	GoodTypeList[I_Food] = pFoo;
+	GoodTypeList[I_Manufact_good] = pManG;
+
 /////////////////////////////////////////////////////////////
 
 	MarketPlace Avito;
@@ -815,68 +818,23 @@ int main(void)
 
 	cout << "	Game cycles test STAGE CRAFT" << endl;
 
-	for (int cycle = 0; cycle < 1; cycle++)//in-game cycles
+	for (int cycle = 0; cycle < 5; cycle++)//in-game cycles
 	{
 		cout << "cycle " << cycle << endl;
-		for (int queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
+		for (size_t queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
 		{
 			cout << "Agent #" << queue << " turn" << endl;
 			
 			cout << "Data before craft: " << endl;
 			Avito.printPlayersInv();
 
-			int item = Avito.Players[queue]->findMin();// searching needed resource
+			Items item = Avito.Players[queue]->findMin();// searching needed resource
+			pGoo = GoodTypeList.at(item);
 
-			switch (item)
+			if (pGoo->IfCraftable(Avito.Players[queue]))
 			{
-				case I_Money:
-				{
-					if (Mon.IfCraftable(Avito.Players[queue]))
-					{
-						cout << "----> Agent #" << queue << " crafted " << item << "<---- " << endl;
-						Avito.Players[queue]->Craft(item);
-					}
-					break;
-				}
-				case I_Material:
-				{
-					if ( Mat.IfCraftable(Avito.Players[queue]) )
-					{
-						cout << "----> Agent #" << queue << " crafted " << item << "<---- " << endl;
-						Avito.Players[queue]->Craft(item);
-					}
-					break;
-				}
-				case I_Labour:
-				{
-					if (Lab.IfCraftable(Avito.Players[queue]))
-					{
-						cout << "----> Agent #" << queue << " crafted " << item << "<---- " << endl;
-						Avito.Players[queue]->Craft(item);
-					}
-					break;
-				}
-				case I_Food:
-				{
-					if (Foo.IfCraftable(Avito.Players[queue]))
-					{
-						cout << "----> Agent #" << queue << " crafted " << item << "<---- " << endl;
-						Avito.Players[queue]->Craft(item);
-					}
-					break;
-				}
-				case I_Manufact_good:
-				{
-					if (ManG.IfCraftable(Avito.Players[queue]))
-					{
-						cout << "----> Agent #" << queue << " crafted " << item << "<---- " << endl;
-						Avito.Players[queue]->Craft(item);
-					}
-					break;
-				}
-				default:
-					cout << "default! something went wrong!" << endl;
-					break;
+				cout << "----> Agent #" << queue << " crafted " << item << "<---- " << endl;
+				pGoo->Craft(Avito.Players[queue]);
 			}
 
 			cout << "Data after craft: " << endl;
@@ -893,7 +851,7 @@ int main(void)
 	for (int cycle = 0; cycle < 10; cycle++)//in-game cycles
 	{
 		cout << "cycle " << cycle << endl;
-		for (int queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
+		for (size_t queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
 		{
 			cout << "Agent #" << queue << " turn" << endl;
 			
