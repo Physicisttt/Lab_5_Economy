@@ -78,140 +78,6 @@ public:
 
 //////////////////////////
 
-	void SellMoney(int koeff)
-	{
-		//inv[I_Money] += Pricelist[I_Money];
-		//inv[I_Money] -= Pricelist[I_Money];
-		cout << "";
-	}
-
-	void SellMaterial(int koeff)
-	{
-		inv[I_Money] += (Pricelist[I_Material] - koeff);
-		inv[I_Material]--;
-	}
-
-	void SellLabour(int koeff)
-	{
-		inv[Items::I_Money] += (Pricelist[I_Labour] - koeff);
-		inv[Items::I_Labour]--;
-	}
-
-	void SellFood(int koeff)
-	{
-		inv[Items::I_Money] += (Pricelist[I_Food] - koeff);
-		inv[Items::I_Food]--;
-	}
-	
-	void SellManufactGood(int koeff)
-	{
-		inv[Items::I_Money] += (Pricelist[I_Manufact_good] - koeff);
-		inv[Items::I_Manufact_good]--;
-	}
-
-	void Sell(int item_type, int koeff)
-	{
-		switch (item_type)
-		{
-		case I_Money:
-		{
-			SellMoney(koeff);
-			break;
-		}
-		case I_Material:
-		{
-			SellMaterial(koeff);
-			break;
-		}
-		case I_Labour:
-		{
-			SellLabour(koeff);
-			break;
-		}
-		case I_Food:
-		{
-			SellFood(koeff);
-			break;
-		}
-		case I_Manufact_good:
-		{
-			SellManufactGood(koeff);
-			break;
-		}
-		default:
-			break;
-		}
-	}
-
-//////////////////////////
-
-	void BuyMoney(int koeff)
-	{
-		//inv[I_Money] -= Pricelist[I_Money];
-		//inv[I_Money] += Pricelist[I_Money];
-		cout << "";
-	}
-
-	void BuyMaterial(int koeff)
-	{
-		inv[Items::I_Money] -= (Pricelist[I_Material] - koeff);
-		inv[Items::I_Material]++;
-	}
-
-	void BuyLabour(int koeff)
-	{
-		inv[Items::I_Money] -= (Pricelist[I_Labour] - koeff);
-		inv[Items::I_Labour]++;
-	}
-
-	void BuyFood(int koeff)
-	{
-		inv[Items::I_Money] -= (Pricelist[I_Food] - koeff);
-		inv[Items::I_Food]++;
-	}
-
-	void BuyManufactGood(int koeff)
-	{
-		inv[Items::I_Money] -= (Pricelist[I_Manufact_good] - koeff);
-		inv[Items::I_Manufact_good]++;
-	}
-
-	void Buy(int item_type, int koeff)
-	{
-		switch (item_type)
-		{
-		case I_Money:
-		{
-			BuyMoney(koeff);
-			break;
-		}
-		case I_Material:
-		{
-			BuyMaterial(koeff);
-			break;
-		}
-		case I_Labour:
-		{
-			BuyLabour(koeff);
-			break;
-		}
-		case I_Food:
-		{
-			BuyFood(koeff);
-			break;
-		}
-		case I_Manufact_good:
-		{
-			BuyManufactGood(koeff);
-			break;
-		}
-		default:
-			break;
-		}
-	}
-
-//////////////////////////
-
 	void print_inventory()
 	{
 		cout << "inventory:" << endl;
@@ -323,6 +189,8 @@ class Good
 {
 public:
 	int prod_time = 0;
+	int cost = 0;
+
 	vector<int> Required_items;
 
 	virtual void print() = 0;
@@ -344,6 +212,16 @@ public:
 
 	virtual void Craft(Agent* agent) = 0;
 
+	virtual void Buy(Agent* agent) = 0;
+
+	virtual bool IfBuyable(Agent* agent) const = 0;
+
+	virtual void Sell(Agent* agent) = 0;
+
+	virtual bool IfSellable(Agent* agent) const = 0;
+
+
+
 	//virtual void Buy(Agent*, int item_type, int price) = 0;
 };
 
@@ -354,6 +232,7 @@ public:
 	Money()
 	{
 		Required_items.push_back(I_Manufact_good);
+		cost = 0;
 	}
 
 	void print()
@@ -379,6 +258,38 @@ public:
 		ResourcePayment(agent);
 		agent->inv[I_Money]++;
 	}
+
+	void Buy(Agent* agent) override
+	{
+		agent->inv[I_Money] -= cost;
+		agent->inv[I_Money]++;
+	}
+
+	bool IfBuyable(Agent* agent) const override
+	{
+		if ( (HowManyItems(agent, I_Money) - cost) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	void Sell(Agent* agent) override
+	{
+		agent->inv[I_Money] += cost;
+		agent->inv[I_Money]--;
+	}
+
+	bool IfSellable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Money) - 1) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
 };
 
 class Material : public Good
@@ -388,6 +299,7 @@ public:
 	{
 		Required_items.push_back(I_Money);
 		Required_items.push_back(I_Labour);
+		cost = 5;
 	}
 
 	void print()
@@ -414,6 +326,38 @@ public:
 		agent->inv[I_Material]++;
 	}
 
+	bool IfBuyable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Money) - cost) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	void Buy(Agent* agent) override
+	{
+		agent->inv[I_Money] -= cost;
+		agent->inv[I_Material]++;
+	}
+
+	void Sell(Agent* agent) override
+	{
+		agent->inv[I_Money] -= cost;
+		agent->inv[I_Material]++;
+	}
+
+	bool IfSellable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Material) - 1) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
 };
 
 class Labour : public Good
@@ -423,6 +367,7 @@ public:
 	{
 		Required_items.push_back(I_Food);
 		Required_items.push_back(I_Manufact_good);
+		cost = 5;
 	}
 
 	void print()
@@ -448,6 +393,38 @@ public:
 		ResourcePayment(agent);
 		agent->inv[I_Labour]++;
 	}
+
+	void Buy(Agent* agent) override
+	{
+		agent->inv[I_Money] -= cost;
+		agent->inv[I_Labour]++;
+	}
+
+	bool IfBuyable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Money) - cost) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	void Sell(Agent* agent) override
+	{
+		agent->inv[I_Money] += cost;
+		agent->inv[I_Labour]--;
+	}
+
+	bool IfSellable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Labour) - 1) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
 };
 
 class Food : public Good
@@ -457,6 +434,7 @@ public:
 	{
 		Required_items.push_back(I_Money);
 		Required_items.push_back(I_Labour);
+		cost = 5;
 	}
 
 	void print()
@@ -482,6 +460,38 @@ public:
 		ResourcePayment(agent);
 		agent->inv[I_Food]++;
 	}
+
+	void Buy(Agent* agent) override
+	{
+		agent->inv[I_Money] -= cost;
+		agent->inv[I_Food]++;
+	}
+
+	bool IfBuyable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Money) - cost) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	void Sell(Agent* agent) override
+	{
+		agent->inv[I_Money] += cost;
+		agent->inv[I_Food]--;
+	}
+
+	bool IfSellable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Food) - 1) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
 };
 
 class Manufact_good : public Good
@@ -492,6 +502,7 @@ public:
 		Required_items.push_back(I_Money);
 		Required_items.push_back(I_Material);
 		Required_items.push_back(I_Labour);
+		cost = 5;
 	}
 
 	void print()
@@ -516,6 +527,38 @@ public:
 	{
 		ResourcePayment(agent);
 		agent->inv[Items::I_Manufact_good]++;
+	}
+
+	void Buy(Agent* agent) override
+	{
+		agent->inv[I_Money] -= cost;
+		agent->inv[I_Manufact_good]++;
+	}
+
+	bool IfBuyable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Money) - cost) < 0)
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	void Sell(Agent* agent) override
+	{
+		agent->inv[I_Money] += cost;
+		agent->inv[I_Manufact_good]--;
+	}
+
+	bool IfSellable(Agent* agent) const override
+	{
+		if ((HowManyItems(agent, I_Manufact_good) - 1) < 0)
+		{
+			return false;
+		}
+
+		return true;
 	}
 };
 
@@ -615,11 +658,13 @@ public:
 	}
 
 	//void Trade(<Seller>, <Client>, <resource>, <price>)
+	/*
 	void Trade(Agent* Seller, Agent* Client, int item_type)
 	{
 		Seller->Sell(item_type, HowManyAvailable(item_type));
 		Client->Buy(item_type, HowManyAvailable(item_type));//HERE////////////////////////////////////////////!!!!!!!!!!!!!
 	}
+	*/
 
 	void Stage_Buy()
 	{
@@ -744,9 +789,8 @@ int main(void)
 	/*cout << "	exchange test 2: " << endl;
 
 	Avito.exchange_good(Avito.Players[0], Items::I_Food, 8, Avito.Players[2], Items::I_Labour, 5);
+	Avito.printPlayersInventory();
 	*/
-	//Avito.printPlayersInventory();
-
 //////////////////////////////////////////////////////////////////////////////
 
 	/*
@@ -778,7 +822,7 @@ int main(void)
 	*/
 
 ////////////////////////////////CRAFT STAGE///////////////////////////////////
-	
+/*
 	Avito.printPlayersInv();
 
 	cout << "	Game cycles test STAGE CRAFT" << endl;
@@ -808,19 +852,20 @@ int main(void)
 	}
 
 	Avito.printPlayersInventory();
-
+*/
 ///////////////////////////////PURCHASE STAGE/////////////////////////////////
-/*
+
 	cout << "	Game cycles test PURCHASE STAGE (between themselves)" << endl;
 
-	for (int cycle = 0; cycle < 10; cycle++)//in-game cycles
+	for (int cycle = 0; cycle < 1; cycle++)//in-game cycles
 	{
 		cout << "cycle " << cycle << endl;
 		for (size_t queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
 		{
 			cout << "Agent #" << queue << " turn" << endl;
 			
-			int item = Avito.Players[queue]->findMin();// searching needed resource
+			Items item = Avito.Players[queue]->findMin();// searching needed resource
+			pGoo = GoodTypeList.at(item);
 			
 			Agent* Seller;
 			int SellerNum;
@@ -828,6 +873,26 @@ int main(void)
 			Seller = Avito.findRichestAgent(item);//searching richest agent of needed resource
 			SellerNum = Avito.findRichestAgentNumber(item);
 
+			if ((pGoo->IfBuyable(Avito.Players[queue])) && (pGoo->IfSellable(Seller)))
+			{
+				cout << "Agent #" << queue << " tried to trade with Agent #" << SellerNum << endl << endl;
+				cout << "Data before trade: " << endl;
+				Avito.printPlayersInv();
+				cout << "----> Agent #" << queue << " purchased " << item << "<----" << endl << endl;
+
+				pGoo->Buy(Avito.Players[queue]);
+				pGoo->Sell(Seller);
+
+				cout << "Data after trade: " << endl;
+				Avito.printPlayersInv();
+			}
+			else
+			{
+				cout << "Agent #" << queue << " cannot afford " << item << endl;
+			}
+
+
+			/*
 			if (Avito.Players[queue]->IfBuyable(item))//trying to buy it
 			{
 				cout << "Agent #" << queue << " tried to trade with Agent #" << SellerNum << endl << endl;
@@ -846,13 +911,14 @@ int main(void)
 			{
 				cout << "Agent #" << queue << " cannot afford " << item << endl;
 			}
+			*/
 		}
 	}
 
 	cout << "	END OF PURCHASE STAGE" << endl;
 	
 	Avito.printPlayersInv();
-*/
+
 //////////////////////////////////////////////////////////////////////////////
 
 	/*
