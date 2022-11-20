@@ -27,9 +27,7 @@ enum Actions
 };
 
 typedef map<int, int> inventory;//map<item_type, item_amount>
-
-typedef map<int, int> Price;//map<item_type, ingredients (to craft)>
-Price Pricelist;
+//typedef map<Items, int> inventory;//map<item_type, item_amount>
 
 int random_int(int left_border, int right_border)
 {
@@ -56,7 +54,7 @@ int random_Amount()
 	return random_int(1, 5);
 }
 
-/////////////////////////Agent/////////////////////////////////////
+/////////////////////////Agent///////////////////////////
 
 class Agent
 {
@@ -155,20 +153,7 @@ public:
 
 		//return min_item;
 	}
-	
-	//rework!!!!!!!!!!!
-	bool IfBuyable(int item_type) const
-	{
-		//so if we look on the price, then its just price check (affordable or not)
-		if (inv.at(I_Money) < Pricelist[item_type])
-		{
-			return false;
-		}
 
-		return true;
-	}
-
-	//bool IfTradeable?? (like barther)
 };
 
 Agent* createPlayer()
@@ -184,43 +169,84 @@ void fillMarketPlace(vector<Agent*>& vec)
 	}
 }
 
-//////////////////////////Classes///////////////////////////////////
+//////////////////////////Classes////////////////////////
 class Good
 {
 public:
-	int prod_time = 0;
-	int cost = 0;
 
-	vector<int> Required_items;
+	virtual Items getResource() const = 0;
 
-	virtual void print() = 0;
+	virtual vector<Items> getReqiredItems() = 0;
 
-	int HowManyItems(Agent* agent, int item_type) const
+	void ResourcePayment(Agent* agent)
+	{
+		vector<Items> RequiredItems;
+		RequiredItems = getReqiredItems();
+
+		for (size_t i = 0; i < RequiredItems.size(); i++)
+		{
+			agent->inv[RequiredItems[i]]--;
+		}
+	}
+
+	void Craft(Agent* agent)
+	{
+		ResourcePayment(agent);
+		agent->inv[getResource()]++;
+	}
+
+	bool IfCraftable(Agent* agent)// const
+	{
+		vector<Items> RequiredItems;
+		RequiredItems = getReqiredItems();
+
+		for (size_t i = 0; i < RequiredItems.size(); i++)
+		{
+			if (HowManyItems(agent, RequiredItems[i]) <= 0)
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	virtual int getCost() const = 0;
+
+	void Buy(Agent* agent)
+	{
+		agent->inv[I_Money] -= getCost();
+		agent->inv[getResource()]++;
+	}
+
+	void Sell(Agent* agent)
+	{
+		agent->inv[I_Money] += getCost();
+		agent->inv[getResource()]--;
+	}
+
+////////////////////////////////////////////////////////////////////
+
+	int HowManyItems(Agent* agent, Items item_type) const
 	{
 		return agent->inv.at(item_type);
 	}
 
-	virtual bool IfCraftable(Agent* agent) const = 0;
 
-	virtual void ResourcePayment(Agent* agent)
+	bool IfBuyable(Agent* agent) const
 	{
-		for (size_t i = 0; i < Required_items.size(); i++)
+		if ((HowManyItems(agent, I_Money) - getCost()) < 0)
 		{
-			agent->inv[ Required_items[i] ]--;
+			return false;
 		}
+
+		return true;
 	}
 
-	virtual void Craft(Agent* agent) = 0;
-
-	virtual void Buy(Agent* agent) = 0;
-
-	virtual bool IfBuyable(Agent* agent) const = 0;
-
-	virtual void Sell(Agent* agent) = 0;
-
-	virtual bool IfSellable(Agent* agent) const = 0;
-
-
+	bool IfSellable(Agent* agent) const
+	{
+		return HowManyItems(agent, getResource()) > 0;
+	}
 
 	//virtual void Buy(Agent*, int item_type, int price) = 0;
 };
@@ -228,346 +254,125 @@ public:
 class Money : public Good
 {
 public:
-
-	Money()
+	Items getResource() const override
 	{
-		Required_items.push_back(I_Manufact_good);
-		cost = 0;
+		return I_Money;
 	}
 
-	void print()
+	vector<Items> getReqiredItems() override
 	{
-		cout << "empty cout";
+		vector<Items> Required;
+		Required.push_back(I_Manufact_good);
+
+		return Required;
 	}
 
-	bool IfCraftable(Agent* agent) const override
+	int getCost() const override
 	{
-		for (size_t i = 0; i < Required_items.size(); i++)
-		{
-			if (HowManyItems(agent, Required_items[i]) <= 0)
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void Craft(Agent* agent) override
-	{
-		ResourcePayment(agent);
-		agent->inv[I_Money]++;
-	}
-
-	void Buy(Agent* agent) override
-	{
-		agent->inv[I_Money] -= cost;
-		agent->inv[I_Money]++;
-	}
-
-	bool IfBuyable(Agent* agent) const override
-	{
-		if ( (HowManyItems(agent, I_Money) - cost) < 0)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
-	void Sell(Agent* agent) override
-	{
-		agent->inv[I_Money] += cost;
-		agent->inv[I_Money]--;
-	}
-
-	bool IfSellable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Money) - 1) < 0)
-		{
-			return false;
-		}
-
-		return true;
+		return 0;
 	}
 };
 
 class Material : public Good
 {
 public:
-	Material()
+	vector<Items> getReqiredItems() override
 	{
-		Required_items.push_back(I_Money);
-		Required_items.push_back(I_Labour);
-		cost = 5;
+		vector<Items> Required;
+		Required.push_back(I_Money);
+		Required.push_back(I_Labour);
+
+		return Required;
 	}
 
-	void print()
+	Items getResource() const override
 	{
-		cout << "empty cout";
+		return I_Material;
 	}
 
-	bool IfCraftable(Agent* agent) const override
+	int getCost() const override
 	{
-		for (size_t i = 0; i < Required_items.size(); i++)
-		{
-			if (HowManyItems(agent, Required_items[i]) <= 0)
-			{
-				return false;
-			}
-		}
-
-		return true;
+		return 5;
 	}
-
-	void Craft(Agent* agent) override
-	{
-		ResourcePayment(agent);
-		agent->inv[I_Material]++;
-	}
-
-	bool IfBuyable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Money) - cost) < 0)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
-	void Buy(Agent* agent) override
-	{
-		agent->inv[I_Money] -= cost;
-		agent->inv[I_Material]++;
-	}
-
-	void Sell(Agent* agent) override
-	{
-		agent->inv[I_Money] -= cost;
-		agent->inv[I_Material]++;
-	}
-
-	bool IfSellable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Material) - 1) < 0)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
 };
 
 class Labour : public Good
 {
 public:
-	Labour()
+	vector<Items> getReqiredItems() override
 	{
-		Required_items.push_back(I_Food);
-		Required_items.push_back(I_Manufact_good);
-		cost = 5;
+		vector<Items> Required;
+		Required.push_back(I_Food);
+		Required.push_back(I_Manufact_good);
+
+		return Required;
 	}
 
-	void print()
+	Items getResource() const override
 	{
-		cout << "empty cout";
+		return I_Labour;
 	}
 
-	bool IfCraftable(Agent* agent) const override
+	int getCost() const override
 	{
-		for (size_t i = 0; i < Required_items.size(); i++)
-		{
-			if (HowManyItems(agent, Required_items[i]) <= 0)
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void Craft(Agent* agent) override
-	{
-		ResourcePayment(agent);
-		agent->inv[I_Labour]++;
-	}
-
-	void Buy(Agent* agent) override
-	{
-		agent->inv[I_Money] -= cost;
-		agent->inv[I_Labour]++;
-	}
-
-	bool IfBuyable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Money) - cost) < 0)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
-	void Sell(Agent* agent) override
-	{
-		agent->inv[I_Money] += cost;
-		agent->inv[I_Labour]--;
-	}
-
-	bool IfSellable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Labour) - 1) < 0)
-		{
-			return false;
-		}
-
-		return true;
+		return 5;
 	}
 };
 
 class Food : public Good
 {
 public:
-	Food()
+	vector<Items> getReqiredItems() override
 	{
-		Required_items.push_back(I_Money);
-		Required_items.push_back(I_Labour);
-		cost = 5;
+		vector<Items> Required;
+		Required.push_back(I_Money);
+		Required.push_back(I_Labour);
+
+		return Required;
 	}
 
-	void print()
+	Items getResource() const override
 	{
-		cout << "empty cout";
+		return I_Food;
 	}
 
-	bool IfCraftable(Agent* agent) const override
+	int getCost() const override
 	{
-		for (size_t i = 0; i < Required_items.size(); i++)
-		{
-			if (HowManyItems(agent, Required_items[i]) <= 0)
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void Craft(Agent* agent) override
-	{
-		ResourcePayment(agent);
-		agent->inv[I_Food]++;
-	}
-
-	void Buy(Agent* agent) override
-	{
-		agent->inv[I_Money] -= cost;
-		agent->inv[I_Food]++;
-	}
-
-	bool IfBuyable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Money) - cost) < 0)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
-	void Sell(Agent* agent) override
-	{
-		agent->inv[I_Money] += cost;
-		agent->inv[I_Food]--;
-	}
-
-	bool IfSellable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Food) - 1) < 0)
-		{
-			return false;
-		}
-
-		return true;
+		return 5;
 	}
 };
 
 class Manufact_good : public Good
 {
 public:
-	Manufact_good()
+
+	vector<Items> getReqiredItems() override
 	{
-		Required_items.push_back(I_Money);
-		Required_items.push_back(I_Material);
-		Required_items.push_back(I_Labour);
-		cost = 5;
+		vector<Items> Required;
+		Required.push_back(I_Money);
+		Required.push_back(I_Material);
+		Required.push_back(I_Labour);
+
+		return Required;
 	}
 
-	void print()
+	Items getResource() const override
 	{
-		cout << "ttt";
+		return I_Manufact_good;
 	}
 
-	bool IfCraftable(Agent* agent) const override
+	int getCost() const override
 	{
-		for (size_t i = 0; i < Required_items.size(); i++)
-		{
-			if (HowManyItems(agent, Required_items[i]) <= 0)
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	void Craft(Agent* agent)
-	{
-		ResourcePayment(agent);
-		agent->inv[Items::I_Manufact_good]++;
-	}
-
-	void Buy(Agent* agent) override
-	{
-		agent->inv[I_Money] -= cost;
-		agent->inv[I_Manufact_good]++;
-	}
-
-	bool IfBuyable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Money) - cost) < 0)
-		{
-			return false;
-		}
-
-		return true;
-	}
-
-	void Sell(Agent* agent) override
-	{
-		agent->inv[I_Money] += cost;
-		agent->inv[I_Manufact_good]--;
-	}
-
-	bool IfSellable(Agent* agent) const override
-	{
-		if ((HowManyItems(agent, I_Manufact_good) - 1) < 0)
-		{
-			return false;
-		}
-
-		return true;
+		return 5;
 	}
 };
 
-//////////////////////GoodType/////////////////////////////////
+//////////////////////GoodType//////////////////////////
 
 typedef map<Items, Good*> GoodType;
 GoodType GoodTypeList;
 
-///////////////////////////MarketPlace//////////////////////////////////
+///////////////////////////MarketPlace//////////////////
 
 class MarketPlace
 {
@@ -676,7 +481,7 @@ public:
 		//not implemented right now
 	}
 
-	void DayCicle()
+	void DayCycle()
 	{
 		//find what every Agent wants
 
@@ -688,71 +493,11 @@ public:
 
 };
 
-////////////////////////////Main////////////////////////////////
+////////////////////////////Main//////////////////////////////////////////////////////////////
 
 int main(void)
 {
-/*	cout << "map test:" << endl;
-
-	inventory ttt;
-
-	ttt[1] = 1;
-	ttt[2] = 2;
-	ttt[3] = 3;
-	ttt[4] = 4;
-	ttt[5] = 5;
-
-
-	cout << "map test: " << ttt[1] << endl;
-
-	cout << "\n\n agent test:" << endl;
-
-	Agent human;
-
-	for (int i = 0; i < Items::Last; i++)
-	{
-		human.inv[i] = 5;
-	}
-
-	human.CraftFood();
-	human.CraftMaterial();
-	human.print_inventory();
-	*/
-	/*
-	vector<Agent> Bazar;//must be vector<Agent*> in the future
-	Bazar.resize(3);
-
-	cout << "Bazar test:" << endl;
-	for (int i = 0; i < Bazar.size(); i++)
-	{
-		cout << "	Agent <" << i << ">" << endl;
-		Bazar[i].print_inventory();
-		cout << endl;
-	}
-
-	Agent* AA = &Bazar[0];
-	Agent* BB = &Bazar[1];
-
-	//exchange_good test
-
-	exchange_good(AA, Items::I_Material, 5, BB, Items::I_Food, 5);
-
-	cout << "	AA inv:" << endl;
-	AA->print_inventory();
-	cout << endl;
-	cout << "	BB inv:" << endl;
-	BB->print_inventory();
-	*/
-
-/////////////////////////Pricelist filling////////////////////////////////////
-
-	Pricelist[I_Money] = 1;
-	Pricelist[I_Material] = 5;
-	Pricelist[I_Labour] = 5;
-	Pricelist[I_Food] = 5;
-	Pricelist[I_Manufact_good] = 5;
-
-///////////////////////Every class object for its functions//////////////////////////////////////
+///////////////////////Every class object for its functions////////
 
 	Money Mon;
 	Labour Lab;
@@ -783,8 +528,7 @@ int main(void)
 
 	Avito.Initialize(5);
 
-	//Avito.printPlayersInventory();
-	Avito.printPlayersInv();
+	//Avito.printPlayersInv();
 
 	/*cout << "	exchange test 2: " << endl;
 
@@ -854,7 +598,7 @@ int main(void)
 	Avito.printPlayersInventory();
 */
 ///////////////////////////////PURCHASE STAGE/////////////////////////////////
-
+/*
 	cout << "	Game cycles test PURCHASE STAGE (between themselves)" << endl;
 
 	for (int cycle = 0; cycle < 1; cycle++)//in-game cycles
@@ -890,20 +634,64 @@ int main(void)
 			{
 				cout << "Agent #" << queue << " cannot afford " << item << endl;
 			}
+		}
+	}
 
+	cout << "	END OF PURCHASE STAGE" << endl;
+	
+	Avito.printPlayersInv();
+*/
+////////////////////////CRAFT + PURCHASE STAGES IN ONE GAME CYCLE/////////////
 
-			/*
-			if (Avito.Players[queue]->IfBuyable(item))//trying to buy it
+	cout << endl << "	START OF THE GAME " << endl << endl;
+
+	for (int cycle = 0; cycle < 50; cycle++)//in-game cycles
+	{
+		cout << "	CYCLE " << cycle << endl << endl;
+		for (size_t queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
+		{
+			///////////////////////CRAFT/////////////////////////////////
+
+			cout << "Agent #" << queue << " craft turn" << endl;
+
+			cout << "Data before craft: " << endl;
+			Avito.printPlayersInv();
+
+			Items item = Avito.Players[queue]->findMin();// searching needed resource
+			pGoo = GoodTypeList.at(item);
+
+			if (pGoo->IfCraftable(Avito.Players[queue]))
+			{
+				cout << "----> Agent #" << queue << " crafted " << item << "<---- " << endl;
+				pGoo->Craft(Avito.Players[queue]);
+			}
+
+			cout << "Data after craft: " << endl;
+			Avito.printPlayersInv();
+
+			//////////////////////PURCHASE//////////////////////////////////
+
+			cout << "Agent #" << queue << " purchase turn" << endl;
+
+			item = Avito.Players[queue]->findMin();// searching needed resource
+			pGoo = GoodTypeList.at(item);
+
+			Agent* Seller;
+			int SellerNum;
+
+			Seller = Avito.findRichestAgent(item);//searching richest agent of needed resource
+			SellerNum = Avito.findRichestAgentNumber(item);
+
+			if ((pGoo->IfBuyable(Avito.Players[queue])) && (pGoo->IfSellable(Seller)))
 			{
 				cout << "Agent #" << queue << " tried to trade with Agent #" << SellerNum << endl << endl;
-				
 				cout << "Data before trade: " << endl;
 				Avito.printPlayersInv();
+				cout << "----> Agent #" << queue << " purchased " << item << "<----" << endl << endl;
 
-				cout << "----> Agent #" << queue << " purchased " << item << "<----"  << endl << endl;
-				
-				Avito.Trade(Seller, Avito.Players[queue], item);
-				
+				pGoo->Buy(Avito.Players[queue]);
+				pGoo->Sell(Seller);
+
 				cout << "Data after trade: " << endl;
 				Avito.printPlayersInv();
 			}
@@ -911,68 +699,17 @@ int main(void)
 			{
 				cout << "Agent #" << queue << " cannot afford " << item << endl;
 			}
-			*/
 		}
 	}
 
-	cout << "	END OF PURCHASE STAGE" << endl;
-	
-	Avito.printPlayersInv();
+	cout << endl << "	END OF THE GAME " << endl;
 
 //////////////////////////////////////////////////////////////////////////////
-
-	/*
-	cout << "	GetIngredients test" << endl;
-	vector<int> ingred;
-	ingred = Avito.Players[1]->GetIngredients(I_Labour);
-	cout << "ingred size = " << ingred.size() << endl;
-	cout << "ingred: {" << ingred[0] << ", " << ingred[1] << "}" << endl;
-	*/
-
-	/*cout << endl << "	IFCRAFTABLE TEST" << endl;
-
-	Avito.Players[0]->inv[1] = 0;
-	Avito.Players[0]->inv[2] = 0;
-	Avito.Players[0]->inv[3] = 0;
-	Avito.Players[0]->inv[4] = 0;
-	Avito.Players[0]->inv[5] = 0;
-
-	Avito.Players[0]->print_inventory();
-
-	if (Avito.Players[0]->IfCraftable(I_Food) == true)
-	{
-		cout << "we can craft this!" << endl;
-	}
-	else
-	{
-		cout << "failure!!!" << endl;
-	}
-	*/
-/*
-	cout << endl << "	IFBUYABLE TEST" << endl;
-
-	Avito.Players[0]->inv[1] = 50;
-	Avito.Players[0]->inv[2] = 0;
-	Avito.Players[0]->inv[3] = 0;
-	Avito.Players[0]->inv[4] = 0;
-	Avito.Players[0]->inv[5] = 0;
-
-	Avito.Players[0]->print_inventory();
-
-	if (Avito.Players[0]->IfBuyable(I_Food) == true)
-	{
-		cout << "we can buy this!" << endl;
-	}
-	else
-	{
-		cout << "failure!!!" << endl;
-	}
-*/
-
 /*
 	cout << "	 TRADE TEST" << endl;
 	Avito.Trade(Avito.Players[0], Avito.Players[1], 4);
 	Avito.printPlayersInventory();
 */
+
 	return 0;
 }
