@@ -28,9 +28,6 @@ enum Actions
 
 typedef map<int, int> inventory;//map<item_type, item_amount>
 
-typedef map<int, vector<int> > Receipts;//map<item_type, ingredients (to craft)>
-Receipts Menu;
-
 typedef map<int, int> Price;//map<item_type, ingredients (to craft)>
 Price Pricelist;
 
@@ -356,10 +353,7 @@ public:
 
 	Money()
 	{
-		//Required_items.push_back(I_Manufact_good);
-
-		Required_items.resize(1);
-		Required_items[0] = I_Manufact_good;
+		Required_items.push_back(I_Manufact_good);
 	}
 
 	void print()
@@ -382,8 +376,7 @@ public:
 
 	void Craft(Agent* agent) override
 	{
-		//ResourcePayment(agent);
-		agent->inv[I_Manufact_good]--;
+		ResourcePayment(agent);
 		agent->inv[I_Money]++;
 	}
 };
@@ -393,9 +386,8 @@ class Material : public Good
 public:
 	Material()
 	{
-		Required_items.resize(2);
-		Required_items[0] = I_Money;
-		Required_items[1] = I_Labour;
+		Required_items.push_back(I_Money);
+		Required_items.push_back(I_Labour);
 	}
 
 	void print()
@@ -418,8 +410,7 @@ public:
 
 	void Craft(Agent* agent) override
 	{
-		agent->inv[I_Money]--;
-		agent->inv[I_Labour]--;
+		ResourcePayment(agent);
 		agent->inv[I_Material]++;
 	}
 
@@ -430,9 +421,8 @@ class Labour : public Good
 public:
 	Labour()
 	{
-		Required_items.resize(2);
-		Required_items[0] = I_Food;
-		Required_items[1] = I_Manufact_good;
+		Required_items.push_back(I_Food);
+		Required_items.push_back(I_Manufact_good);
 	}
 
 	void print()
@@ -455,8 +445,7 @@ public:
 
 	void Craft(Agent* agent) override
 	{
-		agent->inv[I_Food]--;
-		agent->inv[I_Manufact_good]--;
+		ResourcePayment(agent);
 		agent->inv[I_Labour]++;
 	}
 };
@@ -466,9 +455,8 @@ class Food : public Good
 public:
 	Food()
 	{
-		Required_items.resize(2);
-		Required_items[0] = I_Money;
-		Required_items[1] = I_Labour;
+		Required_items.push_back(I_Money);
+		Required_items.push_back(I_Labour);
 	}
 
 	void print()
@@ -491,8 +479,7 @@ public:
 
 	void Craft(Agent* agent) override
 	{
-		agent->inv[I_Money]--;
-		agent->inv[I_Labour]--;
+		ResourcePayment(agent);
 		agent->inv[I_Food]++;
 	}
 };
@@ -502,10 +489,9 @@ class Manufact_good : public Good
 public:
 	Manufact_good()
 	{
-		Required_items.resize(3);
-		Required_items[0] = I_Money;
-		Required_items[1] = I_Material;
-		Required_items[2] = I_Labour;
+		Required_items.push_back(I_Money);
+		Required_items.push_back(I_Material);
+		Required_items.push_back(I_Labour);
 	}
 
 	void print()
@@ -528,9 +514,7 @@ public:
 
 	void Craft(Agent* agent)
 	{
-		agent->inv[Items::I_Money]--;
-		agent->inv[Items::I_Material]--;
-		agent->inv[Items::I_Labour]--;
+		ResourcePayment(agent);
 		agent->inv[Items::I_Manufact_good]++;
 	}
 };
@@ -659,10 +643,6 @@ public:
 
 };
 
-////////////////////////////////////////////////////////////////
-
-
-
 ////////////////////////////Main////////////////////////////////
 
 int main(void)
@@ -719,19 +699,6 @@ int main(void)
 	BB->print_inventory();
 	*/
 
-////////////////////////Menu filling/////////////////////////////////////
- 
-	//typedef map<int, vector<int>> Receipts;
-	//Receipts Menu;
-
-	Menu[I_Money] = { I_Manufact_good };
-	Menu[I_Material] = {I_Money, I_Labour };
-	Menu[I_Labour] = {I_Food, I_Manufact_good };
-	Menu[I_Food] = { I_Money, I_Labour };
-	Menu[I_Manufact_good] = {I_Money, I_Material, I_Labour };
-
-	//cout << "Menu 2,1 ---> " << Menu[2][1] << endl;
-
 /////////////////////////Pricelist filling////////////////////////////////////
 
 	Pricelist[I_Money] = 1;
@@ -779,11 +746,9 @@ int main(void)
 	Avito.exchange_good(Avito.Players[0], Items::I_Food, 8, Avito.Players[2], Items::I_Labour, 5);
 	*/
 	//Avito.printPlayersInventory();
-//////////////////////////////////////////////////////////////////////////////
-
-
 
 //////////////////////////////////////////////////////////////////////////////
+
 	/*
 	cout << "	100000 exchanges test" << endl;
 	int size = Avito.Players.size();
@@ -818,7 +783,7 @@ int main(void)
 
 	cout << "	Game cycles test STAGE CRAFT" << endl;
 
-	for (int cycle = 0; cycle < 5; cycle++)//in-game cycles
+	for (int cycle = 0; cycle < 1; cycle++)//in-game cycles
 	{
 		cout << "cycle " << cycle << endl;
 		for (size_t queue = 0; queue < Avito.Players.size(); queue++)//iterate throw Players
